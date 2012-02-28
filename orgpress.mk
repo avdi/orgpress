@@ -60,6 +60,7 @@ export_target		:= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
 
 # Functions
 flavor_file		= $(BUILD_DIR)/$(BOOK_NAME).$(1)
+uppercase		= $(shell echo $(1) | tr a-z A-Z)
 
 define export_plist_calibre_elisp
 :table-of-contents	$(TABLE_OF_CONTENTS)
@@ -84,16 +85,16 @@ $(info OrgPress version $(ORGPRESS_VERSION))
 include $(CURDIR)/book.mk
 
 $(info Building $(BOOK_NAME))
-$(info Calibre outputs: $(CALIBRE_OUTPUTS))
 
 default: $(BUNDLE_FLAVORS)
 
 $(ALL_FLAVORS):
 	$(MAKE) $(call flavor_file,$@)
 
-$(CALIBRE_OUTPUTS): FLAVOR=$(subst .,,$(suffix $@))
+$(CALIBRE_OUTPUTS): FLAVOR	= $(subst .,,$(suffix $@))
+$(CALIBRE_OUTPUTS): FLAVORFLAGS = $($(call uppercase,$(FLAVOR))FLAGS)
 $(CALIBRE_OUTPUTS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE)
-	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $($(FLAVOR)FLAGS))
+	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(FLAVORFLAGS))
 
 $(export_target): $(EMACS_INIT) $(SOURCE_FILE)
 	$(EMACS) $(EMACS_INIT:%=-l %) \
