@@ -4,6 +4,6 @@
                 (insert-file-contents 
                  (or 
                   (getenv "STYLESHEET")
-                  ("No $STYLESHEET set")))
+                  (error "No $STYLESHEET set")))
                 (buffer-string))
               "\n</style>\n"))
