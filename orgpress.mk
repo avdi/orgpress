@@ -72,7 +72,7 @@ BOOK_TITLE		= $(BOOK_NAME)
 AUTHORS			= Unknown Author
 
 # The person or organization which produced the ebook file
-PRODUCER		= $(AUTHOR)
+PRODUCER		= $(AUTHORS)
 
 # Misc. comments about the book
 COMMENTS		= $(BOOK_TITLE)
@@ -96,11 +96,28 @@ BUILD_DIR		:= $(CURDIR)/build
 export STYLESHEET	= $(ORGPRESS_ROOT)/styles.css
 ALL_FLAVORS		= epub mobi pdf html calibre.html
 BUNDLE_FLAVORS		= epub mobi pdf html
+
+# Flavors which require Calibre conversion
 CALIBRE_FLAVORS		= epub mobi
+
+# File targets Calibre can produce
+CALIBRE_TARGETS		= $(foreach flavor,$(CALIBRE_FLAVORS),$(call flavor_file,$(flavor)))
+
+# Flavors Org exports directly
+ORG_EXPORT_FLAVORS      = pdf html calibre.html
+
+# File targets Org exports directly
+ORG_EXPORT_TARGETS      = $(foreach flavor,$(ORG_EXPORT_FLAVORS),$(call flavor_file,$(flavor)))
+
+# Files to bundle up in the deliverable
 BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%)
-CALIBRE_OUTPUTS		= $(foreach flavor,$(CALIBRE_FLAVORS),$(call flavor_file,$(flavor)))
 
 export_target		:= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
+skeleton		:= $(BUILD_DIR)/$(BOOK_NAME).org
+skeleton_vars		:= BOOK_TITLE AUTHORS SOURCE_FILE
+define skeleton_defs
+$(strip $(foreach varname,$(skeleton_vars),-D ORGPRESS_$(varname)="$($(varname))"))
+endef
 
 ### FUNCTIONS ###
 
@@ -126,7 +143,7 @@ define export_command_calibre_elisp
 		(quote ($(export_plist_calibre_elisp))) 
 		"*orgpress-export*")
 	(with-current-buffer "*orgpress-export*"
-		(write-file "$(export_target)")))
+		(write-file "$@")))
 endef
 
 $(info OrgPress version $(ORGPRESS_VERSION))
@@ -144,12 +161,13 @@ default: $(BUNDLE_FLAVORS)
 $(ALL_FLAVORS):
 	$(MAKE) $(call flavor_file,$@)
 
-$(CALIBRE_OUTPUTS): FLAVOR	= $(subst .,,$(suffix $@))
-$(CALIBRE_OUTPUTS): FLAVORFLAGS = $($(call uppercase,$(FLAVOR))FLAGS)
-$(CALIBRE_OUTPUTS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE)
-	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(FLAVORFLAGS))
+$(CALIBRE_TARGETS): FLAVOR	= $(subst .,,$(suffix $@))
+$(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
+$(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE)
+	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 
-$(export_target): $(EMACS_LOAD) $(SOURCE_FILE)
+$(ORG_EXPORT_TARGETS): FLAVOR	= $(subst .,,$(suffix $@))
+$(ORG_EXPORT_TARGETS): $(EMACS_LOAD) $(SOURCE_FILE)
 	$(EMACS) $(EMACS_LOAD:%=-l %) \
 		--user $(USER) \
 		--batch \
@@ -158,3 +176,8 @@ $(export_target): $(EMACS_LOAD) $(SOURCE_FILE)
 
 $(BUILD_DIR):
 	mkdir -p $@
+
+skeleton: $(skeleton)
+
+$(skeleton): $(ORGPRESS_ROOT)/skeleton.org.m4 $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) 
+	m4 $(skeleton_defs) $< > $@
