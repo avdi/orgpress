@@ -1,3 +1,19 @@
 #!/usr/bin/env bash
 root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-exec make -f "${root}/orgpress.mk" "$@"
+declare -a defs                 # Variable definitions
+declare -a makeflags
+
+while getopts "do" opt; do
+  case $opt in    
+    d)                          # debug
+      defs+=("DEBUG=1")
+      makeflags+=("-d")
+      ;;
+    o)                          # open the target after making
+      defs+=("OPEN_TARGET=1")
+      ;;
+  esac
+  shift $((OPTIND-1))
+done
+
+exec make --no-builtin-rules -f "${root}/orgpress.mk" "${makeflags[@]}" "${defs[@]}" "$@"

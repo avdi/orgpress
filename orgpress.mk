@@ -24,6 +24,16 @@ EMACS_VERSION		= $(shell $(EMACS) --version | head -n1)
 # ELisp files which should be loaded when Emacs is invoked
 EMACS_LOAD		= $(ORGPRESS_ROOT)/init.el
 
+# Emacs command-line arguments
+EMACSFLAGS		= 
+
+# Command for viewing files
+OPEN			= xdg-open
+
+ifdef DEBUG
+  EMACSFLAGS += --debug-init
+endif
+
 # The Calibre conversion command
 CONVERT			= ebook-convert
 
@@ -97,6 +107,9 @@ export STYLESHEET	= $(ORGPRESS_ROOT)/styles.css
 ALL_FLAVORS		= epub mobi pdf html calibre.html
 BUNDLE_FLAVORS		= epub mobi pdf html
 
+# Extra files or directories that the book depends on, e.g. images
+# ASSETS			= 
+
 # Flavors which require Calibre conversion
 CALIBRE_FLAVORS		= epub mobi
 
@@ -111,6 +124,9 @@ ORG_EXPORT_TARGETS      = $(foreach flavor,$(ORG_EXPORT_FLAVORS),$(call flavor_f
 
 # Files to bundle up in the deliverable
 BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%)
+
+# Standard dependencies
+STANDARD_DEPS		= $(ORGPRESS_MAKEFILE) $(BOOK_MAKEFILE) $(build_assets)
 
 export_target		:= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
 skeleton		:= $(BUILD_DIR)/$(BOOK_NAME).org
@@ -128,31 +144,42 @@ flavor_file		= $(BUILD_DIR)/$(BOOK_NAME).$(1)
 # Convert a string to all-uppercase
 uppercase		= $(shell echo $(1) | tr a-z A-Z)
 
-define export_plist_calibre_elisp
+define export_plist
 :table-of-contents	$(TABLE_OF_CONTENTS)
 :headline-levels	$(HEADLINE_LEVELS)
 :section-numbers	$(SECTION_NUMBERS)
 :language		$(LANGUAGE)
 endef
 
-define export_command_calibre_elisp
+define export_elisp
 (progn
-	(org-export-as-html 
+        (cd "$(CURDIR)")
+	(org-export-as-$(FLAVOR) 
 		$(HEADLINE_LEVELS) 
 		nil 
-		(quote ($(export_plist_calibre_elisp))) 
+		(quote ($(export_plist))) 
 		"*orgpress-export*")
 	(with-current-buffer "*orgpress-export*"
 		(write-file "$@")))
 endef
 
+
 $(info OrgPress version $(ORGPRESS_VERSION))
 
+ifdef DEBUG
+  $(info Debug mode enabled)
+  DEBUG_PRECIOUS_FILES = $(skeleton) 
+endif 
+
 include $(BOOK_MAKEFILE)
+
+build_assets = $(patsubst %,$(BUILD_DIR)/%,$(wildcard $(ASSETS)))
 
 $(info Building $(BOOK_NAME))
 
 default: $(BUNDLE_FLAVORS)
+
+info:
 
 # This sets up shortcut targets for flavors, e.g.:
 #   make epub
@@ -160,24 +187,33 @@ default: $(BUNDLE_FLAVORS)
 #   make pdf
 $(ALL_FLAVORS):
 	$(MAKE) $(call flavor_file,$@)
+	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
 
-$(CALIBRE_TARGETS): FLAVOR	= $(subst .,,$(suffix $@))
+%.pdf %.html %.txt %.mobi %.epub: FLAVOR = $(subst .,,$(suffix $@))
+
 $(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
-$(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE)
+$(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 
-$(ORG_EXPORT_TARGETS): FLAVOR	= $(subst .,,$(suffix $@))
-$(ORG_EXPORT_TARGETS): $(EMACS_LOAD) $(SOURCE_FILE)
-	$(EMACS) $(EMACS_LOAD:%=-l %) \
-		--user $(USER) \
-		--batch \
-		--file $(SOURCE_FILE) \
-		--eval '$(strip $(export_command_calibre_elisp))' \
+%.pdf %.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS)
+	$(EMACS) $(EMACSFLAGS) \
+                 $(EMACS_LOAD:%=-l %) \
+		 --user $(USER) \
+		 --batch \
+		 --file "$<" \
+		 --eval '$(strip $(export_elisp))'
 
 $(BUILD_DIR):
 	mkdir -p $@
 
 skeleton: $(skeleton)
 
+$(skeleton): | $(BUILD_DIR)
 $(skeleton): $(ORGPRESS_ROOT)/skeleton.org.m4 $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) 
 	m4 $(skeleton_defs) $< > $@
+
+$(build_assets):
+	mkdir -p $(@D)
+	cp -r $(@:$(BUILD_DIR)/%=%) $@
+
+.PRECIOUS: $(DEBUG_PRECIOUS_FILES) 
