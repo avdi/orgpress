@@ -30,6 +30,11 @@ EMACSFLAGS		=
 # Command for viewing files
 OPEN			= xdg-open
 
+# Macro processor
+M4			= m4
+M4_INIT_FILE		= $(abspath $(ORGPRESS_ROOT)/init.m4)
+M4FLAGS			= --prefix-builtins $(M4_INIT_FILE)
+
 ifdef DEBUG
   EMACSFLAGS += --debug-init
 endif
@@ -67,13 +72,22 @@ endef
 # The input HTML file for Calibre conversions
 CALIBRE_INPUT		= $(call flavor_file,calibre.html)
 
+# Awk! Awk! Awk!
+AWK			= gawk
+AWKFLAGS		= 
+
+# Strip out figures and listings, replace with placeholders
+skeletonize_file	= $(realpath $(ORGPRESS_ROOT)/skeletonize.awk)
+skel			= $(AWK) $(AWKFLAGS) -f $(skeletonize_file)
+skelflags		= $(foreach var,listings_dir figures_dir,-v$(var)="$($(var))")
+
 ### BOOK METADATA ###
 
 # The basename of the book, for use in filenames
 BOOK_NAME               = $(notdir $(CURDIR))
 
-# The main org-mode source file
-SOURCE_FILE		= $(BOOK_NAME).org
+# The main org-mode source files
+SOURCE_FILES		= $(realpath $(BOOK_NAME).org)
 
 # The book title
 BOOK_TITLE		= $(BOOK_NAME)
@@ -128,12 +142,17 @@ BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%)
 # Standard dependencies
 STANDARD_DEPS		= $(ORGPRESS_MAKEFILE) $(BOOK_MAKEFILE) $(build_assets)
 
-export_target		:= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
-skeleton		:= $(BUILD_DIR)/$(BOOK_NAME).org
-skeleton_vars		:= BOOK_TITLE AUTHORS SOURCE_FILE
-define skeleton_defs
-$(strip $(foreach varname,$(skeleton_vars),-D ORGPRESS_$(varname)="$($(varname))"))
+all_targets		= $(addprefix $(BOOK_NAME).,$(ALL_FLAVORS))
+export_target		= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
+master			= $(BUILD_DIR)/master.org
+master_vars		= BOOK_TITLE AUTHORS SOURCE_FILES sections_file listings_dir figures_dir
+define master_defs
+$(strip $(foreach varname,$(master_vars),-D ORGPRESS_$(varname)="$($(varname))"))
 endef
+sections_file		= $(BUILD_DIR)/sections.org.m4
+skeletons		= $(SOURCE_FILES:$(CURDIR)/%.org=$(BUILD_DIR)/%.skeleton)
+listings_dir		= $(BUILD_DIR)/listings
+figures_dir		= $(BUILD_DIR)/figures_dir
 
 ### FUNCTIONS ###
 
@@ -168,7 +187,7 @@ $(info OrgPress version $(ORGPRESS_VERSION))
 
 ifdef DEBUG
   $(info Debug mode enabled)
-  DEBUG_PRECIOUS_FILES = $(skeleton) 
+  DEBUG_PRECIOUS_FILES = $(master) 
 endif 
 
 include $(BOOK_MAKEFILE)
@@ -189,13 +208,13 @@ $(ALL_FLAVORS):
 	$(MAKE) $(call flavor_file,$@)
 	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
 
-%.pdf %.html %.txt %.mobi %.epub: FLAVOR = $(subst .,,$(suffix $@))
+$(addprefix %.,$(ALL_FLAVORS)): FLAVOR = $(subst .,,$(suffix $@))
 
 $(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
 $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 
-%.pdf %.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS)
+%.pdf %.html %.calibre.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
 	$(EMACS) $(EMACSFLAGS) \
                  $(EMACS_LOAD:%=-l %) \
 		 --user $(USER) \
@@ -203,17 +222,31 @@ $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 		 --file "$<" \
 		 --eval '$(strip $(export_elisp))'
 
-$(BUILD_DIR):
+$(BUILD_DIR)/$(BOOK_NAME).org: $(master)
+	cp $< $@
+
+$(BUILD_DIR) $(listings_dir) $(figures_dir):
 	mkdir -p $@
 
-skeleton: $(skeleton)
+master: $(master)
 
-$(skeleton): | $(BUILD_DIR)
-$(skeleton): $(ORGPRESS_ROOT)/skeleton.org.m4 $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) 
-	m4 $(skeleton_defs) $< > $@
+# Order-only prerequisite on build dir
+$(master): | $(BUILD_DIR)
+$(master): $(ORGPRESS_ROOT)/skeleton.org.m4 $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) $(sections_file) $(M4_INIT_FILE)
+	$(M4) $(M4FLAGS) $(master_defs) $< > $@
+
+$(sections_file): $(STANDARD_DEPS) $(skeletons)
+	-rm $@
+	for fn in $(skeletons); do echo "m4_include($${fn})" >> $@; done
 
 $(build_assets):
 	mkdir -p $(@D)
 	cp -r $(@:$(BUILD_DIR)/%=%) $@
 
-.PRECIOUS: $(DEBUG_PRECIOUS_FILES) 
+$(BUILD_DIR)/%.skeleton: $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
+	$(skel) $(skelflags) $< > $@
+
+.PRECIOUS: $(DEBUG_PRECIOUS_FILES)
+
+# Targets that aren't files and never will be
+.PHONY: $(ALL_FLAVORS) default info master clean

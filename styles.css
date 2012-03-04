@@ -1048,3 +1048,14 @@
     /* widget-single-line-field */
     background-color: #d9d9d9;
 }
+
+.listing .caption, .figure p:nth-child(2) {
+    font-size: smaller;
+    font-style: italic;
+    text-align: center;
+}
+
+pre {
+    margin-left: 3ex;
+    margin-right: 3ex;
+}
