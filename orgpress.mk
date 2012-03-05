@@ -36,7 +36,7 @@ M4_INIT_FILE		= $(abspath $(ORGPRESS_ROOT)/init.m4)
 M4FLAGS			= --prefix-builtins $(M4_INIT_FILE)
 
 ifdef DEBUG
-  EMACSFLAGS += --debug-init
+  EMACSFLAGS += --debug-init --eval '(setq debug-on-error t)'
 endif
 
 # The Calibre conversion command
@@ -76,6 +76,9 @@ CALIBRE_INPUT		= $(call flavor_file,calibre.html)
 AWK			= gawk
 AWKFLAGS		= 
 
+# LaTeX search path
+export TEXINPUTS	= .:$(BUILD_DIR):$(ORGPRESS_ROOT):
+
 # Strip out figures and listings, replace with placeholders
 skeletonize_file	= $(realpath $(ORGPRESS_ROOT)/skeletonize.awk)
 skel			= $(AWK) $(AWKFLAGS) -f $(skeletonize_file)
@@ -109,6 +112,12 @@ PUBLISHER		= $(AUTHORS)
 
 # The publication date
 PUBDATE			= $(shell ls -ldc $(CURDIR) | cut -d' ' -f6)
+
+# The revision number
+BOOK_REVISION		= 1
+
+# The publication year
+PUBYEAR			= $(firstword $(subst -, ,$(PUBDATE)))
 
 # Org export customizations
 HEADLINE_LEVELS		:= 5
@@ -145,7 +154,7 @@ STANDARD_DEPS		= $(ORGPRESS_MAKEFILE) $(BOOK_MAKEFILE) $(build_assets)
 all_targets		= $(addprefix $(BOOK_NAME).,$(ALL_FLAVORS))
 export_target		= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
 master			= $(BUILD_DIR)/master.org
-master_vars		= BOOK_TITLE AUTHORS SOURCE_FILES sections_file listings_dir figures_dir
+master_vars		= BOOK_TITLE AUTHORS BOOK_REVISION PUBYEAR SOURCE_FILES sections_file listings_dir figures_dir latex_headers_file
 define master_defs
 $(strip $(foreach varname,$(master_vars),-D ORGPRESS_$(varname)="$($(varname))"))
 endef
@@ -153,6 +162,8 @@ sections_file		= $(BUILD_DIR)/sections.org.m4
 skeletons		= $(SOURCE_FILES:$(CURDIR)/%.org=$(BUILD_DIR)/%.skeleton)
 listings_dir		= $(BUILD_DIR)/listings
 figures_dir		= $(BUILD_DIR)/figures_dir
+latex_headers_file	= $(realpath $(ORGPRESS_ROOT)/headers.tex)	
+minted_file		= $(abspath $(BUILD_DIR)/minted.sty)
 
 ### FUNCTIONS ###
 
@@ -172,16 +183,11 @@ endef
 
 define export_elisp
 (progn
-        (cd "$(CURDIR)")
 	(org-export-as-$(FLAVOR) 
 		$(HEADLINE_LEVELS) 
 		nil 
-		(quote ($(export_plist))) 
-		"*orgpress-export*")
-	(with-current-buffer "*orgpress-export*"
-		(write-file "$@")))
+		(quote ($(export_plist)))))
 endef
-
 
 $(info OrgPress version $(ORGPRESS_VERSION))
 
@@ -189,6 +195,9 @@ ifdef DEBUG
   $(info Debug mode enabled)
   DEBUG_PRECIOUS_FILES = $(master) 
 endif 
+ifndef DEBUG
+  EMACSFLAGS += --batch
+endif
 
 include $(BOOK_MAKEFILE)
 
@@ -214,11 +223,10 @@ $(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
 $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 
-%.pdf %.html %.calibre.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
+%.pdf %.html %.calibre.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET) $(minted_file)
 	$(EMACS) $(EMACSFLAGS) \
                  $(EMACS_LOAD:%=-l %) \
 		 --user $(USER) \
-		 --batch \
 		 --file "$<" \
 		 --eval '$(strip $(export_elisp))'
 
@@ -245,6 +253,10 @@ $(build_assets):
 
 $(BUILD_DIR)/%.skeleton: $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@
+
+$(minted_file):
+	cd $(@D) && \
+	wget "http://minted.googlecode.com/files/minted.sty"
 
 .PRECIOUS: $(DEBUG_PRECIOUS_FILES)
 

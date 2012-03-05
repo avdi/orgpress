@@ -1,0 +1,21 @@
+# An experiment kept around for posterity
+
+#+name: figure
+#+BEGIN_SRC emacs-lisp :exports none
+  (concat
+    "\n#+BEGIN_LaTeX:\n"
+    "\\begin{figure}[htb]\n"
+    "\\centering\n"
+    "\\includegraphics[width=0.90\\textwidth]{" path "}\n"
+    "\\caption{" caption "}\n"
+    "\\end{figure}\n"
+    "#+END_LaTeX\n"
+    "#+BEGIN_HTML:\n"
+    "<figure>\n"
+    "<img alt='" caption "' src='" path "' />\n"
+    "  <figcaption>" caption "</figcaption>\n"
+    "</figure>\n"
+    "#+END_HTML\n")
+#+END_SRC
+
+#+MACRO: figure #+call: figure(path="$1",caption="$2") :results value raw
