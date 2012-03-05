@@ -1,3 +1,6 @@
+(require 'org)
+(require 'org-exp)
+(require 'org-latex)
 (setq org-export-latex-listings 'minted)
 (setq org-export-latex-minted t)
 (setq org-export-latex-minted-langs
@@ -25,3 +28,22 @@
 (setq org-confirm-babel-evaluate nil)
 (setq org-export-htmlize-output-type (quote css))
 (setq org-export-htmlized-org-css-url nil)
+(add-to-list 'org-export-latex-classes
+	     '("orgpress-report"
+	       "\\documentclass{report}"
+	       ("\\chapter{%s}" . "\\chapter*{%s}")
+	       ("\\section{%s}" . "\\section*{%s}")
+	       ("\\subsection{%s}" . "\\subsection*{%s}")
+	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+	       ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+(setq cover-file (or (getenv "PDF_COVER") "cover.pdf"))
+(setq cover-file-opts (or (getenv "PDF_COVER_OPTS") "pages=1, noautoscale=true"))
+(when (and (stringp cover-file) 
+           (not (string= cover-file ""))
+           (file-exists-p cover-file))
+  (setq org-export-latex-title-command
+        (concat "\\includepdf["
+                cover-file-opts
+                "]{"
+                cover-file
+                "}")))

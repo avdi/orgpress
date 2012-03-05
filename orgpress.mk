@@ -79,6 +79,9 @@ AWKFLAGS		=
 # LaTeX search path
 export TEXINPUTS	= .:$(BUILD_DIR):$(ORGPRESS_ROOT):
 
+# The LaTeX documentclass to use
+LATEX_CLASS		= orgpress-report
+
 # Strip out figures and listings, replace with placeholders
 skeletonize_file	= $(realpath $(ORGPRESS_ROOT)/skeletonize.awk)
 skel			= $(AWK) $(AWKFLAGS) -f $(skeletonize_file)
@@ -127,7 +130,7 @@ SECTION_NUMBERS		:= nil
 # Misc setup
 BUILD_DIR		:= $(CURDIR)/build
 export STYLESHEET	= $(ORGPRESS_ROOT)/styles.css
-ALL_FLAVORS		= epub mobi pdf html calibre.html
+ALL_FLAVORS		= epub mobi pdf html calibre.html tex txt
 BUNDLE_FLAVORS		= epub mobi pdf html
 
 # Extra files or directories that the book depends on, e.g. images
@@ -165,6 +168,12 @@ figures_dir		= $(BUILD_DIR)/figures_dir
 latex_headers_file	= $(realpath $(ORGPRESS_ROOT)/headers.tex)	
 minted_file		= $(abspath $(BUILD_DIR)/minted.sty)
 
+# Org flavor aliases
+org_flavor_alias_txt	= text
+org_flavor_alias_tex	= latex
+org_flavor_alias_html   = html
+org_flavor_alias_pdf    = pdf
+
 ### FUNCTIONS ###
 
 # Given a flavor name (e.g. "mobi"), return the path of the
@@ -179,14 +188,24 @@ define export_plist
 :headline-levels	$(HEADLINE_LEVELS)
 :section-numbers	$(SECTION_NUMBERS)
 :language		$(LANGUAGE)
+:latex-class		"$(LATEX_CLASS)"
+:section-numbers	t
 endef
 
 define export_elisp
 (progn
-	(org-export-as-$(FLAVOR) 
+	(org-export-as-$(org_flavor_alias_$(FLAVOR))
 		$(HEADLINE_LEVELS) 
 		nil 
 		(quote ($(export_plist)))))
+endef
+
+define emacs_export_command
+	$(EMACS) $(EMACSFLAGS) \
+                 $(EMACS_LOAD:%=-l %) \
+		 --user $(USER) \
+		 --file "$<" \
+		 --eval '$(strip $(export_elisp))'
 endef
 
 $(info OrgPress version $(ORGPRESS_VERSION))
@@ -213,7 +232,7 @@ info:
 #   make epub
 # Or:
 #   make pdf
-$(ALL_FLAVORS):
+$(ALL_FLAVORS): 
 	$(MAKE) $(call flavor_file,$@)
 	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
 
@@ -223,12 +242,20 @@ $(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
 $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 
-%.pdf %.html %.calibre.html %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET) $(minted_file)
-	$(EMACS) $(EMACSFLAGS) \
-                 $(EMACS_LOAD:%=-l %) \
-		 --user $(USER) \
-		 --file "$<" \
-		 --eval '$(strip $(export_elisp))'
+%.html %.calibre.html: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
+	$(emacs_export_command)
+
+%.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS)
+	$(emacs_export_command)
+
+%.tex: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(minted_file) $(latex_headers_file) 
+	$(emacs_export_command)
+
+%.pdf: %.tex $(STANDARD_DEPS)
+	-( cd $(@D); \
+	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
+	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
+	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $< )
 
 $(BUILD_DIR)/$(BOOK_NAME).org: $(master)
 	cp $< $@

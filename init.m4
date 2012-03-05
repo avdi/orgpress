@@ -1,7 +1,6 @@
 m4_changequote(`[[[',`]]]')m4_dnl
 m4_changecom([[[#-]]])m4_dnl
 
-#- Ignore whitespace in macro defs
 m4_divert([[[-1]]])
 
 #- Get the listing filename for a given listing name
