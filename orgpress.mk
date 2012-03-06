@@ -83,9 +83,13 @@ export TEXINPUTS	= .:$(BUILD_DIR):$(ORGPRESS_ROOT):
 LATEX_CLASS		= orgpress-report
 
 # Strip out figures and listings, replace with placeholders
-skeletonize_file	= $(realpath $(ORGPRESS_ROOT)/skeletonize.awk)
+skeletonize_file	= $(abspath $(ORGPRESS_ROOT)/skeletonize.awk)
 skel			= $(AWK) $(AWKFLAGS) -f $(skeletonize_file)
 skelflags		= $(foreach var,listings_dir figures_dir,-v$(var)="$($(var))")
+
+preplisting_file	= $(abspath $(ORGPRESS_ROOT)/preplisting.awk)
+preplisting		= $(AWK) $(AWKFLAGS) -f $(preplisting_file)
+preplistingflags	= $(foreach var,listings_dir FLAVOR,-v$(var)="$($(var))")
 
 ### BOOK METADATA ###
 
@@ -162,11 +166,14 @@ define master_defs
 $(strip $(foreach varname,$(master_vars),-D ORGPRESS_$(varname)="$($(varname))"))
 endef
 sections_file		= $(BUILD_DIR)/sections.org.m4
-skeletons		= $(SOURCE_FILES:$(CURDIR)/%.org=$(BUILD_DIR)/%.skeleton)
-listings_dir		= $(BUILD_DIR)/listings
+skeletons		= $(SOURCE_FILES:$(CURDIR)/%.org=$(BUILD_DIR)/%.skeleton$(flavor_suffix))
+listings_dir		= $(BUILD_DIR)/listings$(flavor_suffix)
 figures_dir		= $(BUILD_DIR)/figures_dir
 latex_headers_file	= $(realpath $(ORGPRESS_ROOT)/headers.tex)	
 minted_file		= $(abspath $(BUILD_DIR)/minted.sty)
+listings		= $(wildcard $(listings_dir)/*.listing)
+master_listings		= $(listings:%.listing=%.mlisting)
+mlistings_timestamp	= $(BUILD_DIR)/master-listings$(flavor_suffix).timestamp
 
 # Org flavor aliases
 org_flavor_alias_txt	= text
@@ -228,15 +235,17 @@ default: $(BUNDLE_FLAVORS)
 
 info:
 
+clean:
+	-rm -rf build
+
 # This sets up shortcut targets for flavors, e.g.:
 #   make epub
 # Or:
 #   make pdf
+$(ALL_FLAVORS): export FLAVOR=$@
 $(ALL_FLAVORS): 
 	$(MAKE) $(call flavor_file,$@)
 	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
-
-$(addprefix %.,$(ALL_FLAVORS)): FLAVOR = $(subst .,,$(suffix $@))
 
 $(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
 $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
@@ -251,11 +260,18 @@ $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 %.tex: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(minted_file) $(latex_headers_file) 
 	$(emacs_export_command)
 
-%.pdf: %.tex $(STANDARD_DEPS)
+ifndef flavor_suffix
+  %.pdf: export flavor_suffix=-pdf
+  %.pdf: export FLAVOR=tex
+  %.pdf:
+	$(MAKE) $@
+else 
+  %.pdf: %.tex $(STANDARD_DEPS)
 	-( cd $(@D); \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $< )
+endif
 
 $(BUILD_DIR)/$(BOOK_NAME).org: $(master)
 	cp $< $@
@@ -265,9 +281,15 @@ $(BUILD_DIR) $(listings_dir) $(figures_dir):
 
 master: $(master)
 
+$(mlistings_timestamp): $(skeletons)
+	$(MAKE) master-listings$(flavor_suffix)
+	touch $@
+
+master-listings$(flavor_suffix): $(master_listings)
+
 # Order-only prerequisite on build dir
 $(master): | $(BUILD_DIR)
-$(master): $(ORGPRESS_ROOT)/skeleton.org.m4 $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) $(sections_file) $(M4_INIT_FILE)
+$(master): $(abspath $(ORGPRESS_ROOT)/skeleton.org.m4) $(CURDIR)/book.mk $(ORGPRESS_MAKEFILE) $(sections_file) $(M4_INIT_FILE) $(mlistings_timestamp)
 	$(M4) $(M4FLAGS) $(master_defs) $< > $@
 
 $(sections_file): $(STANDARD_DEPS) $(skeletons)
@@ -278,14 +300,18 @@ $(build_assets):
 	mkdir -p $(@D)
 	cp -r $(@:$(BUILD_DIR)/%=%) $@
 
-$(BUILD_DIR)/%.skeleton: $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
+$(BUILD_DIR)/%.skeleton$(flavor_suffix): $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@
 
 $(minted_file):
 	cd $(@D) && \
 	wget "http://minted.googlecode.com/files/minted.sty"
 
+# To make a master listing
+%.mlisting: %.listing $(preplisting_file)
+	$(preplisting) $(preplistingflags) $< > $@
+
 .PRECIOUS: $(DEBUG_PRECIOUS_FILES)
 
 # Targets that aren't files and never will be
-.PHONY: $(ALL_FLAVORS) default info master clean
+.PHONY: $(ALL_FLAVORS) default info master clean master-listings$(flavor_suffix)
