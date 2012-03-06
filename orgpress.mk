@@ -58,19 +58,17 @@ define CONVERTFLAGS
 endef
 
 # Calibre flags specific to Epub
-define EPUBFLAGS
---output-profile ipad  --preserve-cover-aspect-ratio
+define EPUB_FLAGS
+--output-profile ipad
 endef
-# --cover "$(EPUBCOVER)"
 
 # Calibre flags specific to Mobi
-define MOBIFLAGS
---output-profile kindle 
+define MOBI_FLAGS
+--output-profile kindle
 endef
-# --cover "$(MOBICOVER)"
 
 # The input HTML file for Calibre conversions
-CALIBRE_INPUT		= $(call flavor_file,calibre.html)
+CALIBRE_INPUT		= $(abspath $(BUILD_DIR)/$(BOOK_NAME)$(flavor_suffix).html)
 
 # Awk! Awk! Awk!
 AWK			= gawk
@@ -125,6 +123,16 @@ BOOK_REVISION		= 1
 
 # The publication year
 PUBYEAR			= $(firstword $(subst -, ,$(PUBDATE)))
+
+# A PDF containing a cover page to insert at the beginning
+export PDF_COVER        =
+
+# Options for the LaTeX \includepdf command
+export PDF_COVER_OPTS   = pages=1, noautoscale=true
+
+COVER_IMAGE		=
+MOBI_COVER		= $(COVER_IMAGE)
+EPUB_COVER		= $(COVER_IMAGE)
 
 # Org export customizations
 HEADLINE_LEVELS		:= 5
@@ -187,6 +195,10 @@ org_flavor_alias_pdf    = pdf
 # corresponding output file
 flavor_file		= $(BUILD_DIR)/$(BOOK_NAME).$(1)
 
+# Given a filename, return the "flavor" of the file
+# E.g. foo.mobi -> mobi
+file_flavor		= $(subst .,,$(suffix $(1)))
+
 # Convert a string to all-uppercase
 uppercase		= $(shell echo $(1) | tr a-z A-Z)
 
@@ -221,11 +233,20 @@ ifdef DEBUG
   $(info Debug mode enabled)
   DEBUG_PRECIOUS_FILES = $(master) 
 endif 
+
 ifndef DEBUG
   EMACSFLAGS += --batch
 endif
 
 include $(BOOK_MAKEFILE)
+
+ifneq ($(strip $(MOBI_COVER)),)
+  MOBI_FLAGS +=  --cover "$(MOBI_COVER)"
+endif
+
+ifneq ($(strip $(EPUB_COVER)),)
+  EPUB_FLAGS += --preserve-cover-aspect-ratio  --cover "$(EPUB_COVER)"
+endif
 
 build_assets = $(patsubst %,$(BUILD_DIR)/%,$(wildcard $(ASSETS)))
 
@@ -242,16 +263,24 @@ clean:
 #   make epub
 # Or:
 #   make pdf
-$(ALL_FLAVORS): export FLAVOR=$@
+$(ALL_FLAVORS): export TARGET_FLAVOR=$@
+$(ALL_FLAVORS): export FLAVOR=$(TARGET_FLAVOR)
 $(ALL_FLAVORS): 
 	$(MAKE) $(call flavor_file,$@)
 	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
 
-$(CALIBRE_TARGETS): flavorflags = $($(call uppercase,$(FLAVOR))FLAGS)
-$(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
+ifndef flavor_suffix
+  $(CALIBRE_TARGETS): export flavor_suffix=-$(TARGET_FLAVOR)
+  $(CALIBRE_TARGETS): export flavorflags = $($(call uppercase,$(TARGET_FLAVOR))_FLAGS)
+  $(CALIBRE_TARGETS): export FLAVOR=html
+  $(CALIBRE_TARGETS):
+	$(MAKE) $@
+else
+  $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
 	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
+endif
 
-%.html %.calibre.html: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
+%$(flavor_suffix).html: %$(flavor_suffix).org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
 	$(emacs_export_command)
 
 %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS)
@@ -266,14 +295,14 @@ ifndef flavor_suffix
   %.pdf:
 	$(MAKE) $@
 else 
-  %.pdf: %.tex $(STANDARD_DEPS)
+  %.pdf: %.tex $(STANDARD_DEPS) $(PDF_COVER)
 	-( cd $(@D); \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $< )
 endif
 
-$(BUILD_DIR)/$(BOOK_NAME).org: $(master)
+$(BUILD_DIR)/$(BOOK_NAME)$(flavor_suffix).org: $(master)
 	cp $< $@
 
 $(BUILD_DIR) $(listings_dir) $(figures_dir):
