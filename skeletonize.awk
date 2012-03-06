@@ -20,11 +20,25 @@ function start_listing()
     listing_name    = (basename "-" formatted_count)
     listing_file    = (listings_dir "/" listing_name ".listing")
     system("rm " listing_file "> /dev/null 2>&1")
+    print_metadata(listing_file)
     if(caption)
         print "ORGPRESS_LISTING(" listing_name ",[[[" caption  "]]])"
     else
         print "ORGPRESS_LISTING(" listing_name ")"
     caption = ""
+}
+
+function print_metadata(file)
+{
+    ORS = "\r\n"
+    print "filename: " FILENAME >file
+    print "number: " listing_count >file
+    print "name: " listing_name >file
+    print "flavor: " FLAVOR >file
+    if(caption)
+        print "caption: " caption >file
+    print "" >file
+    ORS = "\n"
 }
 
 /^[[:space:]]*#\+BEGIN_SRC/     { start_listing() }

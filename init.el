@@ -9,7 +9,8 @@
         (cc           "c++")
         (cperl        "perl")
         (shell-script "bash")
-        (caml         "ocaml")))
+        (caml         "ocaml")
+        (feature      "cucumber")))
 (setq org-latex-to-pdf-process 
       '("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
         "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"

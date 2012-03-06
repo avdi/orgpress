@@ -85,7 +85,7 @@ LATEX_CLASS		= orgpress-report
 # Strip out figures and listings, replace with placeholders
 skeletonize_file	= $(abspath $(ORGPRESS_ROOT)/skeletonize.awk)
 skel			= $(AWK) $(AWKFLAGS) -f $(skeletonize_file)
-skelflags		= $(foreach var,listings_dir figures_dir,-v$(var)="$($(var))")
+skelflags		= $(foreach var,listings_dir figures_dir FLAVOR,-v$(var)="$($(var))")
 
 preplisting_file	= $(abspath $(ORGPRESS_ROOT)/preplisting.awk)
 preplisting		= $(AWK) $(AWKFLAGS) -f $(preplisting_file)
@@ -281,7 +281,7 @@ $(BUILD_DIR) $(listings_dir) $(figures_dir):
 
 master: $(master)
 
-$(mlistings_timestamp): $(skeletons)
+$(mlistings_timestamp): $(skeletons) $(preplisting_file)
 	$(MAKE) master-listings$(flavor_suffix)
 	touch $@
 
