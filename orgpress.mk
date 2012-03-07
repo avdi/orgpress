@@ -78,6 +78,10 @@ AWKFLAGS		=
 RUBY			= ruby
 RUBYFLAGS		= -w
 
+# Document converter extroardinaire
+PANDOC			= pandoc
+PANDOCFLAGS		= 
+
 # LaTeX search path
 export TEXINPUTS	= .:$(BUILD_DIR):$(ORGPRESS_ROOT):
 
@@ -141,9 +145,9 @@ MOBI_COVER		= $(COVER_IMAGE)
 EPUB_COVER		= $(COVER_IMAGE)
 
 # Org export customizations
-HEADLINE_LEVELS		:= 5
-TABLE_OF_CONTENTS	:= nil
-SECTION_NUMBERS		:= nil
+HEADLINE_LEVELS		= 5
+TABLE_OF_CONTENTS	= nil
+SECTION_NUMBERS		= nil
 
 # Misc setup
 BUILD_DIR		:= $(CURDIR)/build
@@ -227,7 +231,6 @@ define export_plist
 :section-numbers	$(SECTION_NUMBERS)
 :language		$(LANGUAGE)
 :latex-class		"$(LATEX_CLASS)"
-:section-numbers	t
 endef
 
 define export_elisp
@@ -326,6 +329,7 @@ endif
 ifndef flavor_suffix
   %.pdf: export flavor_suffix=-pdf
   %.pdf: export FLAVOR=tex
+  %.pdf: export SECTION_NUMBERS=t
   %.pdf:
 	$(MAKE) $@
 else 
@@ -376,6 +380,9 @@ $(build_font_licenses):
 
 $(BUILD_DIR)/%.skeleton$(flavor_suffix): $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@
+
+%.org: %.md
+	$(PANDOC) $(PANDOCFLAGS) -o $@ $<
 
 $(minted_file):
 	cd $(@D) && \

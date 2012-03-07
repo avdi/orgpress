@@ -8,4 +8,4 @@
 ** DONE [#A] Optimized font list for Epub/Mobi
    Droid Sans Mono, Inconsolata, Anonymous Pro, Bitstream Vera Sans Mono, monospace;
 ** DONE Smaller code font in epub
-
+** DONE [#A] Markdown sections
