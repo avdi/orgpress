@@ -156,8 +156,10 @@ BUNDLE_FILE		= $(abspath $(BOOK_NAME).zip)
 # Extra files or directories that the book depends on, e.g. images
 # ASSETS			= 
 
-FONTS			= $(abspath	$(ORGPRESS_ROOT)/fonts/Inconsolata.otf \
-					$(ORGPRESS_ROOT)/fonts/DroidSansMono.ttf)
+FONTS			= $(abspath	$(ORGPRESS_ROOT)/fonts/Inconsolata.otf)
+
+#					$(ORGPRESS_ROOT)/fonts/DroidSansMono.ttf)
+
 FONT_LICENSES		= $(addsuffix -LICENSE.txt,$(basename $(FONTS)))
 build_fonts		= $(addprefix $(BUILD_DIR)/,$(notdir $(FONTS)))
 build_font_licenses	= $(addprefix $(BUILD_DIR)/,$(notdir $(FONT_LICENSES)))

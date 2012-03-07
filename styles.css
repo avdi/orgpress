@@ -1062,8 +1062,7 @@ pre {
 }
 
 pre, code, tt {
-    font-family: "Droid Sans Mono", 
-                 "Inconsolata", 
+    font-family: "Inconsolata", 
                  "Anonymous Pro", 
                  "Bitstream Vera Sans Mono", 
                  monospace;
