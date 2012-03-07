@@ -66,7 +66,16 @@ function print_fancy_listing_footer() {
 }
 
 function escape(str) {
-    return gensub(/[_#%{}$]/, "\\\\&", "g", str)
+    if(FLAVOR ~ /(tex|pdf)/) {
+        return gensub(/[_#%{}$]/, "\\\\&", "g", str)
+    } else if(FLAVOR ~ /(html|epub|mobi)/) {
+        str = gensub(/&/, "&amp;", "g", str)
+        str = gensub(/</, "&lt;", "g", str)
+        str = gensub(/>/, "&gt;", "g", str)
+        return str
+    } else {
+        return str
+    }
 }
 
 /^$/ {
