@@ -54,7 +54,7 @@ define CONVERTFLAGS
 --level1-toc "//h:div[@class='outline-2']/h:h2" 
 --level2-toc "//h:div[@class='outline-3']/h:h3" 
 --level3-toc "//h:div[@class='outline-4']/h:h4" 
---extra-css ".example { border: 1pt solid black; padding: 0.5ex; }"
+--extra-css $(CALIBRE_STYLESHEET)
 endef
 
 # Calibre flags specific to Epub
@@ -141,12 +141,18 @@ SECTION_NUMBERS		:= nil
 
 # Misc setup
 BUILD_DIR		:= $(CURDIR)/build
-export STYLESHEET	= $(ORGPRESS_ROOT)/styles.css
-ALL_FLAVORS		= epub mobi pdf html calibre.html tex txt
-BUNDLE_FLAVORS		= epub mobi pdf html
+export STYLESHEET	= $(abspath $(ORGPRESS_ROOT)/styles.css)
+CALIBRE_STYLESHEET	= $(abspath $(ORGPRESS_ROOT)/calibre.css)
+ALL_FLAVORS		= epub mobi pdf html tex txt
+BUNDLE_FLAVORS		= epub mobi pdf
+BUNDLE_FILE		= $(abspath $(BOOK_NAME).zip)
 
 # Extra files or directories that the book depends on, e.g. images
 # ASSETS			= 
+
+FONTS			= $(abspath	$(ORGPRESS_ROOT)/fonts/Inconsolata.otf \
+					$(ORGPRESS_ROOT)/fonts/DroidSansMono.ttf)
+build_fonts		= $(addprefix $(BUILD_DIR)/,$(notdir $(FONTS)))
 
 # Flavors which require Calibre conversion
 CALIBRE_FLAVORS		= epub mobi
@@ -155,7 +161,7 @@ CALIBRE_FLAVORS		= epub mobi
 CALIBRE_TARGETS		= $(foreach flavor,$(CALIBRE_FLAVORS),$(call flavor_file,$(flavor)))
 
 # Flavors Org exports directly
-ORG_EXPORT_FLAVORS      = pdf html calibre.html
+ORG_EXPORT_FLAVORS      = pdf html
 
 # File targets Org exports directly
 ORG_EXPORT_TARGETS      = $(foreach flavor,$(ORG_EXPORT_FLAVORS),$(call flavor_file,$(flavor)))
@@ -252,7 +258,15 @@ build_assets = $(patsubst %,$(BUILD_DIR)/%,$(wildcard $(ASSETS)))
 
 $(info Building $(BOOK_NAME))
 
-default: $(BUNDLE_FLAVORS)
+default: bundle
+
+bundle: $(BUNDLE_FILE)
+
+$(BUNDLE_FILE): | $(STANDARD_DEPS)
+$(BUNDLE_FILE): $(BUNDLE_FILES) $(BUNDLE_EXTRAS)
+	-rm $@
+	zip $@ -r $(BUNDLE_EXTRAS)
+	zip $@ -j $(BUNDLE_FILES)
 
 info:
 
@@ -276,8 +290,8 @@ ifndef flavor_suffix
   $(CALIBRE_TARGETS):
 	$(MAKE) $@
 else
-  $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(CURDIR)/book.mk $(STANDARD_DEPS)
-	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
+  $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(build_fonts) $(CURDIR)/book.mk $(STANDARD_DEPS)
+	cd $(BUILD_DIR) && $(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
 endif
 
 %$(flavor_suffix).html: %$(flavor_suffix).org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
@@ -328,6 +342,12 @@ $(sections_file): $(STANDARD_DEPS) $(skeletons)
 $(build_assets):
 	mkdir -p $(@D)
 	cp -r $(@:$(BUILD_DIR)/%=%) $@
+
+$(BUILD_DIR)/%.ttf: $(ORGPRESS_ROOT)/fonts/%.ttf
+	cp $< $@
+
+$(BUILD_DIR)/%.otf: $(ORGPRESS_ROOT)/fonts/%.otf
+	cp $< $@
 
 $(BUILD_DIR)/%.skeleton$(flavor_suffix): $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@

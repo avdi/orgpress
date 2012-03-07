@@ -1058,4 +1058,13 @@
 pre {
     margin-left: 3ex;
     margin-right: 3ex;
+    font-size: small;
+}
+
+pre, code, tt {
+    font-family: "Droid Sans Mono", 
+                 "Inconsolata", 
+                 "Anonymous Pro", 
+                 "Bitstream Vera Sans Mono", 
+                 monospace;
 }

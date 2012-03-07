@@ -1,3 +1,11 @@
 
 * Issues
-** TODO Generalize rules
+** DONE Generalize rules
+** TODO [#A] HTML escaping for figure captions
+** TODO [#B] Better HTML figure caption generation
+** TODO [#A] No section numbers for mobi/epub
+** TODO [#C] Smaller PDF page size
+** DONE [#A] Optimized font list for Epub/Mobi
+   Droid Sans Mono, Inconsolata, Anonymous Pro, Bitstream Vera Sans Mono, monospace;
+** DONE Smaller code font in epub
+

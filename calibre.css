@@ -1,0 +1,28 @@
+.example { 
+    border: 1pt solid black; padding: 0.5ex; 
+}
+
+@font-face { 
+    font-family: "Inconsolata"; 
+    font-weight: normal; 
+    font-style: normal; 
+    src: url(Inconsolata.otf) 
+}
+@font-face { 
+    font-family: "Inconsolata"; 
+    font-weight: normal; 
+    font-style: oblique; 
+    src: url(Inconsolata.otf) 
+}
+@font-face { 
+    font-family: "Droid Sans Mono"; 
+    font-weight: normal; 
+    font-style: normal; 
+    src: url(DroidSansMono.otf) 
+}
+@font-face { 
+    font-family: "Droid Sans Mono"; 
+    font-weight: normal; 
+    font-style: oblique; 
+    src: url(DroidSansMono.otf) 
+}
