@@ -74,6 +74,10 @@ CALIBRE_INPUT		= $(abspath $(BUILD_DIR)/$(BOOK_NAME)$(flavor_suffix).html)
 AWK			= gawk
 AWKFLAGS		= 
 
+# Some newfangled language from Japan
+RUBY			= ruby
+RUBYFLAGS		= -w
+
 # LaTeX search path
 export TEXINPUTS	= .:$(BUILD_DIR):$(ORGPRESS_ROOT):
 
@@ -88,6 +92,8 @@ skelflags		= $(foreach var,listings_dir figures_dir FLAVOR,-v$(var)="$($(var))")
 preplisting_file	= $(abspath $(ORGPRESS_ROOT)/preplisting.awk)
 preplisting		= $(AWK) $(AWKFLAGS) -f $(preplisting_file)
 preplistingflags	= $(foreach var,listings_dir FLAVOR,-v$(var)="$($(var))")
+
+update_epub_manifest_file = $(abspath $(ORGPRESS_ROOT)/update-epub-manifest.rb)
 
 ### BOOK METADATA ###
 
@@ -152,7 +158,9 @@ BUNDLE_FILE		= $(abspath $(BOOK_NAME).zip)
 
 FONTS			= $(abspath	$(ORGPRESS_ROOT)/fonts/Inconsolata.otf \
 					$(ORGPRESS_ROOT)/fonts/DroidSansMono.ttf)
+FONT_LICENSES		= $(addsuffix -LICENSE.txt,$(basename $(FONTS)))
 build_fonts		= $(addprefix $(BUILD_DIR)/,$(notdir $(FONTS)))
+build_font_licenses	= $(addprefix $(BUILD_DIR)/,$(notdir $(FONT_LICENSES)))
 
 # Flavors which require Calibre conversion
 CALIBRE_FLAVORS		= epub mobi
@@ -166,8 +174,11 @@ ORG_EXPORT_FLAVORS      = pdf html
 # File targets Org exports directly
 ORG_EXPORT_TARGETS      = $(foreach flavor,$(ORG_EXPORT_FLAVORS),$(call flavor_file,$(flavor)))
 
+# License files to include with the distributable bundle
+LICENSES		= $(build_font_licenses)
+
 # Files to bundle up in the deliverable
-BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%)
+BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%) $(LICENSES)
 
 # Standard dependencies
 STANDARD_DEPS		= $(ORGPRESS_MAKEFILE) $(BOOK_MAKEFILE) $(build_assets)
@@ -233,6 +244,13 @@ define emacs_export_command
 		 --eval '$(strip $(export_elisp))'
 endef
 
+define convert_command
+	cd $(BUILD_DIR) &&
+	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags)) &&
+	zip -j $@ $(build_fonts) &&
+	$(RUBY) $(RUBYFLAGS) $(update_epub_manifest_file) $@
+endef
+
 $(info OrgPress version $(ORGPRESS_VERSION))
 
 ifdef DEBUG
@@ -291,7 +309,7 @@ ifndef flavor_suffix
 	$(MAKE) $@
 else
   $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(build_fonts) $(CURDIR)/book.mk $(STANDARD_DEPS)
-	cd $(BUILD_DIR) && $(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
+	$(strip $(convert_command))
 endif
 
 %$(flavor_suffix).html: %$(flavor_suffix).org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
@@ -345,9 +363,14 @@ $(build_assets):
 
 $(BUILD_DIR)/%.ttf: $(ORGPRESS_ROOT)/fonts/%.ttf
 	cp $< $@
+	cp $(basename $<)-LICENSE.txt $(@D)
 
 $(BUILD_DIR)/%.otf: $(ORGPRESS_ROOT)/fonts/%.otf
 	cp $< $@
+	cp $(basename $<)-LICENSE.txt $(@D)
+
+$(build_font_licenses):
+	$(MAKE) $(build_fonts)
 
 $(BUILD_DIR)/%.skeleton$(flavor_suffix): $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@
