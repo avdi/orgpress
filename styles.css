@@ -1049,7 +1049,7 @@
     background-color: #d9d9d9;
 }
 
-.listing .caption, .figure p:nth-child(2) {
+.listing .caption, .figure p:nth-child(2), .figure .caption {
     font-size: smaller;
     font-style: italic;
     text-align: center;

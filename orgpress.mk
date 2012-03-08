@@ -194,13 +194,15 @@ export_target		= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
 master			= $(BUILD_DIR)/master.org
 master_vars		= BOOK_TITLE AUTHORS BOOK_REVISION PUBYEAR SOURCE_FILES sections_file listings_dir figures_dir latex_headers_file
 define master_defs
-$(strip $(foreach varname,$(master_vars),-D ORGPRESS_$(varname)="$($(varname))"))
+$(strip $(foreach varname,$(strip $(master_vars)),-D ORGPRESS_$(varname)="$($(varname))"))
 endef
 sections_file		= $(BUILD_DIR)/sections.org.m4
-skeletons		= $(SOURCE_FILES:$(CURDIR)/%.org=$(BUILD_DIR)/%.skeleton$(flavor_suffix))
+skeletons		= $(patsubst	$(abspath $(CURDIR))/%.org,\
+					$(abspath $(BUILD_DIR))/%.skeleton$(flavor_suffix),\
+					$(abspath $(SOURCE_FILES)))
 listings_dir		= $(BUILD_DIR)/listings$(flavor_suffix)
 figures_dir		= $(BUILD_DIR)/figures_dir
-latex_headers_file	= $(realpath $(ORGPRESS_ROOT)/headers.tex)	
+latex_headers_file	= $(abspath $(ORGPRESS_ROOT)/orgpress_headers.tex)
 minted_file		= $(abspath $(BUILD_DIR)/minted.sty)
 listings		= $(wildcard $(listings_dir)/*.listing)
 master_listings		= $(listings:%.listing=%.mlisting)
@@ -238,7 +240,8 @@ define export_elisp
 	(org-export-as-$(org_flavor_alias_$(FLAVOR))
 		$(HEADLINE_LEVELS) 
 		nil 
-		(quote ($(export_plist)))))
+		(quote ($(export_plist))))
+	(kill-emacs))
 endef
 
 define emacs_export_command
@@ -286,7 +289,7 @@ default: bundle
 bundle: $(BUNDLE_FILE)
 
 $(BUNDLE_FILE): | $(STANDARD_DEPS)
-$(BUNDLE_FILE): $(BUNDLE_FILES) $(BUNDLE_EXTRAS)
+$(BUNDLE_FILE): $(BUNDLE_FLAVORS)
 	-rm $@
 	zip $@ -r $(BUNDLE_EXTRAS)
 	zip $@ -j $(BUNDLE_FILES)
@@ -294,7 +297,7 @@ $(BUNDLE_FILE): $(BUNDLE_FILES) $(BUNDLE_EXTRAS)
 info:
 
 clean:
-	-rm -rf build
+	-rm -rf $(BUNDLE_FILE) build
 
 # This sets up shortcut targets for flavors, e.g.:
 #   make epub
@@ -333,7 +336,7 @@ ifndef flavor_suffix
   %.pdf:
 	$(MAKE) $@
 else 
-  %.pdf: %.tex $(STANDARD_DEPS) $(PDF_COVER)
+  %.pdf: %$(flavor_suffix).tex $(STANDARD_DEPS) $(PDF_COVER)
 	-( cd $(@D); \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \

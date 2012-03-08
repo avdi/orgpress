@@ -3,7 +3,7 @@
 ** DONE Generalize rules
 ** DONE [#A] HTML escaping for figure captions
 ** TODO [#B] Better HTML figure caption generation
-** TODO [#A] No section numbers for mobi/epub
+** DONE [#A] No section numbers for mobi/epub
 ** TODO [#C] Smaller PDF page size
 ** DONE [#A] Optimized font list for Epub/Mobi
    Droid Sans Mono, Inconsolata, Anonymous Pro, Bitstream Vera Sans Mono, monospace;

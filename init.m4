@@ -15,8 +15,13 @@ m4_define([[[ORGPRESS_ESCAPE_LATEX]]],
 #- Output a fancy figure with caption
 #- ORGPRESS_FANCY_FIGURE(filename, caption)
 m4_define([[[ORGPRESS_FANCY_FIGURE]]],
-[[[#+CAPTION: $2
-[[$1]] ]]])
+[[[#+BEGIN_HTML
+<div class="figure">
+  <img src="$1" alt="$2"/>
+  <div class="caption">$2</div>
+</div>
+#+END_HTML
+]]])
 
 #- Output a code listing. Note: caption argument is now IGNORED.
 m4_define([[[ORGPRESS_LISTING]]],
