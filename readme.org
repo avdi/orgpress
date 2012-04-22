@@ -1,11 +1,8 @@
+* OrgPress
+  These are the makefiles and scripts I use to turn org-mode manuscripts into nicely formatted HTML, PDF, Epub, and Mobi (Kindle) formats.
 
-* Issues
-** DONE Generalize rules
-** DONE [#A] HTML escaping for figure captions
-** TODO [#B] Better HTML figure caption generation
-** DONE [#A] No section numbers for mobi/epub
-** TODO [#C] Smaller PDF page size
-** DONE [#A] Optimized font list for Epub/Mobi
-   Droid Sans Mono, Inconsolata, Anonymous Pro, Bitstream Vera Sans Mono, monospace;
-** DONE Smaller code font in epub
-** DONE [#A] Markdown sections
+  *Warning*: these are presented as-is. They are undocumented, unwarrantied, and messy. 
+
+  *Caution*: contents may contain trace amounts of AWK and M4. 
+
+
