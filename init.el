@@ -1,6 +1,37 @@
+(defun orgpress-env-file-contents (env-variable default)
+  "If ENV-VARIABLE points to a file, return its contents. Otherwise return DEFAULT."
+  (let ((filename (getenv env-variable)))
+    (if (and (stringp filename) 
+               (not (string= filename ""))
+               (file-exists-p filename))
+        (progn
+          (with-temp-buffer
+            (insert-file-contents filename)
+            (buffer-string)))
+      default)))
+
+(defun orgpress-read-var (varname default)
+  "If VARNAME is set, return the result of reading it. Otherwise return DEFAULT."
+  (let ((value (getenv varname)))
+    (if (and (stringp value) 
+             (not (string= value "")))
+        (read value)
+      default)))
+
+(defun orgpress-get-var (varname default)
+  "If VARNAME is set, return the string value. Otherwise return DEFAULT."
+  (let ((value (getenv varname)))
+    (if (and (stringp value) 
+             (not (string= value "")))
+        value
+      default)))
+
+
 (require 'org)
 (require 'org-exp)
 (require 'org-latex)
+(require 'org-html)
+(require 'org-jsinfo)
 (setq org-export-latex-listings 'minted)
 (setq org-export-latex-minted t)
 (setq org-export-latex-minted-langs
@@ -48,3 +79,21 @@
                 "]{"
                 cover-file
                 "}")))
+
+(set-variable 'org-export-html-preamble
+              (orgpress-env-file-contents "HTML_PREAMBLE_FILE" 
+                                          org-export-html-preamble))
+(set-variable 'org-export-html-postamble
+              (orgpress-env-file-contents "HTML_POSTAMBLE_FILE" 
+                                          org-export-html-preamble))
+
+(setcdr (assq 'sdepth org-infojs-options) 
+        (orgpress-get-var "INFOJS_SECTION_DEPTH" "max"))
+
+(setcdr (assq 'buttons org-infojs-options) 
+        (orgpress-get-var "INFOJS_BUTTONS" "0"))
+
+(setcdr (assq 'path org-infojs-options) 
+        (orgpress-get-var "INFOJS_PATH" "http://orgmode.org/org-info.js"))
+
+

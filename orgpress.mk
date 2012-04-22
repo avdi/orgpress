@@ -22,7 +22,7 @@ EMACS			= $(shell which emacs)
 EMACS_VERSION		= $(shell $(EMACS) --version | head -n1)
 
 # ELisp files which should be loaded when Emacs is invoked
-EMACS_LOAD		= $(ORGPRESS_ROOT)/init.el
+export EMACS_LOAD	= $(ORGPRESS_ROOT)/init.el
 
 # Emacs command-line arguments
 EMACSFLAGS		= 
@@ -68,7 +68,7 @@ define MOBI_FLAGS
 endef
 
 # The input HTML file for Calibre conversions
-CALIBRE_INPUT		= $(abspath $(BUILD_DIR)/$(BOOK_NAME)$(flavor_suffix).html)
+CALIBRE_INPUT		= $(abspath $(BUILD_DIR)/$(BOOK_NAME)$(FLAVOR_SUFFIX).html)
 
 # Awk! Awk! Awk!
 AWK			= gawk
@@ -104,8 +104,14 @@ update_epub_manifest_file = $(abspath $(ORGPRESS_ROOT)/update-epub-manifest.rb)
 # The basename of the book, for use in filenames
 BOOK_NAME               = $(notdir $(CURDIR))
 
+FRONT_MATTER_FILES	= $(abspath $(ORGPRESS_ROOT)/about.org.m4)
+
+BODY_MATTER_FILES	= $(abspath $(BOOK_NAME).org)
+
+BACK_MATTER_FILES	=
+
 # The main org-mode source files
-SOURCE_FILES		= $(realpath $(BOOK_NAME).org)
+SOURCE_FILES		= $(FRONT_MATTER_FILES) $(BODY_MATTER_FILES) $(BACK_MATTER_FILES)
 
 # The book title
 BOOK_TITLE		= $(BOOK_NAME)
@@ -149,6 +155,15 @@ HEADLINE_LEVELS		= 5
 TABLE_OF_CONTENTS	= nil
 SECTION_NUMBERS		= nil
 
+# Customize the InfoJS JavaScript applied to HTML views
+export INFOJS_PATH		= "http://orgmode.org/org-info.js"
+export INFOJS_SECTION_DEPTH	= "2"
+export INFOJS_BUTTONS		= "1"
+
+# HTML TO insert at the top of HTML export
+export HTML_PREAMBLE_FILE =
+export HTML_POSTAMBLE_FILE =
+
 # Misc setup
 BUILD_DIR		:= $(CURDIR)/build
 export STYLESHEET	= $(abspath $(ORGPRESS_ROOT)/styles.css)
@@ -187,26 +202,28 @@ LICENSES		= $(build_font_licenses)
 BUNDLE_FILES		= $(BUNDLE_FLAVORS:%=$(BUILD_DIR)/$(BOOK_NAME).%) $(LICENSES)
 
 # Standard dependencies
-STANDARD_DEPS		= $(ORGPRESS_MAKEFILE) $(BOOK_MAKEFILE) $(build_assets)
+STANDARD_DEPS		= $(build_assets)
 
 all_targets		= $(addprefix $(BOOK_NAME).,$(ALL_FLAVORS))
 export_target		= $(BUILD_DIR)/$(BOOK_NAME).$(FLAVOR)
 master			= $(BUILD_DIR)/master.org
-master_vars		= BOOK_TITLE AUTHORS BOOK_REVISION PUBYEAR SOURCE_FILES sections_file listings_dir figures_dir latex_headers_file
+master_vars		= FLAVOR TARGET_FLAVOR FLAVOR_SUFFIX BOOK_TITLE AUTHORS \
+			  BOOK_REVISION PUBYEAR SOURCE_FILES sections_file \
+			  listings_dir figures_dir latex_headers_file
 define master_defs
 $(strip $(foreach varname,$(strip $(master_vars)),-D ORGPRESS_$(varname)="$($(varname))"))
 endef
 sections_file		= $(BUILD_DIR)/sections.org.m4
 skeletons		= $(patsubst	$(abspath $(CURDIR))/%.org,\
-					$(abspath $(BUILD_DIR))/%.skeleton$(flavor_suffix),\
+					$(abspath $(BUILD_DIR))/%.skeleton$(FLAVOR_SUFFIX),\
 					$(abspath $(SOURCE_FILES)))
-listings_dir		= $(BUILD_DIR)/listings$(flavor_suffix)
+listings_dir		= $(BUILD_DIR)/listings$(FLAVOR_SUFFIX)
 figures_dir		= $(BUILD_DIR)/figures_dir
 latex_headers_file	= $(abspath $(ORGPRESS_ROOT)/orgpress_headers.tex)
 minted_file		= $(abspath $(BUILD_DIR)/minted.sty)
 listings		= $(wildcard $(listings_dir)/*.listing)
 master_listings		= $(listings:%.listing=%.mlisting)
-mlistings_timestamp	= $(BUILD_DIR)/master-listings$(flavor_suffix).timestamp
+mlistings_timestamp	= $(BUILD_DIR)/master-listings$(FLAVOR_SUFFIX).timestamp
 
 # Org flavor aliases
 org_flavor_alias_txt	= text
@@ -254,7 +271,13 @@ endef
 
 define convert_command
 	cd $(BUILD_DIR) &&
-	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags)) &&
+	$(CONVERT) $< $@ $(strip $(CONVERTFLAGS)) $(strip $(flavorflags))
+endef
+
+mobi_convert_command = $(convert_command)
+
+define epub_convert_command
+	$(convert_command) &&
 	zip -j $@ $(build_fonts) &&
 	$(RUBY) $(RUBYFLAGS) $(update_epub_manifest_file) $@
 endef
@@ -309,18 +332,21 @@ $(ALL_FLAVORS):
 	$(MAKE) $(call flavor_file,$@)
 	if [ -n "$(OPEN_TARGET)" ]; then $(OPEN) $(call flavor_file,$@); fi
 
-ifndef flavor_suffix
-  $(CALIBRE_TARGETS): export flavor_suffix=-$(TARGET_FLAVOR)
+ifndef FLAVOR_SUFFIX
+  $(CALIBRE_TARGETS): export FLAVOR_SUFFIX=-$(TARGET_FLAVOR)
   $(CALIBRE_TARGETS): export flavorflags = $($(call uppercase,$(TARGET_FLAVOR))_FLAGS)
   $(CALIBRE_TARGETS): export FLAVOR=html
   $(CALIBRE_TARGETS):
 	$(MAKE) $@
 else
   $(CALIBRE_TARGETS): $(CALIBRE_INPUT) $(build_fonts) $(CURDIR)/book.mk $(STANDARD_DEPS)
-	$(strip $(convert_command))
+	$(strip $($(TARGET_FLAVOR)_convert_command))
 endif
 
-%$(flavor_suffix).html: %$(flavor_suffix).org $(EMACS_LOAD) $(STANDARD_DEPS) $(STYLESHEET)
+%$(FLAVOR_SUFFIX).html: %$(FLAVOR_SUFFIX).org $(EMACS_LOAD) $(STANDARD_DEPS) \
+                        $(STYLESHEET) $(HTML_PREAMBLE_FILE) $(HTML_POSTAMBLE_FILE)
+	HTML_PREAMBLE_FILE="$(abspath $(HTML_PREAMBLE_FILE))"   \
+	HTML_POSTAMBLE_FILE="$(abspath $(HTML_POSTAMBLE_FILE))" \
 	$(emacs_export_command)
 
 %.txt: %.org $(EMACS_LOAD) $(STANDARD_DEPS)
@@ -329,21 +355,23 @@ endif
 %.tex: %.org $(EMACS_LOAD) $(STANDARD_DEPS) $(minted_file) $(latex_headers_file) 
 	$(emacs_export_command)
 
-ifndef flavor_suffix
-  %.pdf: export flavor_suffix=-pdf
+ifndef FLAVOR_SUFFIX
+  %.pdf: export FLAVOR_SUFFIX=-letter
   %.pdf: export FLAVOR=tex
   %.pdf: export SECTION_NUMBERS=t
+  %.pdf: export TABLE_OF_CONTENTS=t
   %.pdf:
-	$(MAKE) $@
+	$(MAKE) SECTION_NUMBERS=t TABLE_OF_CONTENTS=t $@
+	cp $(basename $@)$(FLAVOR_SUFFIX).pdf $@
 else 
-  %.pdf: %$(flavor_suffix).tex $(STANDARD_DEPS) $(PDF_COVER)
+  %.pdf: %$(FLAVOR_SUFFIX).tex $(STANDARD_DEPS) $(PDF_COVER)
 	-( cd $(@D); \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $<; \
 	   pdflatex -shell-escape -interaction nonstopmode -output-directory $(<D) $< )
 endif
 
-$(BUILD_DIR)/$(BOOK_NAME)$(flavor_suffix).org: $(master)
+$(BUILD_DIR)/$(BOOK_NAME)$(FLAVOR_SUFFIX).org: $(master)
 	cp $< $@
 
 $(BUILD_DIR) $(listings_dir) $(figures_dir):
@@ -352,10 +380,10 @@ $(BUILD_DIR) $(listings_dir) $(figures_dir):
 master: $(master)
 
 $(mlistings_timestamp): $(skeletons) $(preplisting_file)
-	$(MAKE) master-listings$(flavor_suffix)
+	$(MAKE) master-listings$(FLAVOR_SUFFIX)
 	touch $@
 
-master-listings$(flavor_suffix): $(master_listings)
+master-listings$(FLAVOR_SUFFIX): $(master_listings)
 
 # Order-only prerequisite on build dir
 $(master): | $(BUILD_DIR)
@@ -381,7 +409,8 @@ $(BUILD_DIR)/%.otf: $(ORGPRESS_ROOT)/fonts/%.otf
 $(build_font_licenses):
 	$(MAKE) $(build_fonts)
 
-$(BUILD_DIR)/%.skeleton$(flavor_suffix): $(CURDIR)/%.org $(listings_dir) $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
+$(abspath $(BUILD_DIR)/%.skeleton$(FLAVOR_SUFFIX)): $(abspath $(CURDIR)/%.org) $(listings_dir) \
+                                                    $(figures_dir) $(skeletonize_file) $(STANDARD_DEPS)
 	$(skel) $(skelflags) $< > $@
 
 %.org: %.md
@@ -398,4 +427,4 @@ $(minted_file):
 .PRECIOUS: $(DEBUG_PRECIOUS_FILES)
 
 # Targets that aren't files and never will be
-.PHONY: $(ALL_FLAVORS) default info master clean master-listings$(flavor_suffix)
+.PHONY: $(ALL_FLAVORS) default info master clean master-listings$(FLAVOR_SUFFIX)

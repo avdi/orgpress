@@ -15,6 +15,12 @@ m4_define([[[ORGPRESS_ESCAPE_LATEX]]],
 #- Output a fancy figure with caption
 #- ORGPRESS_FANCY_FIGURE(filename, caption)
 m4_define([[[ORGPRESS_FANCY_FIGURE]]],
+          [[[m4_ifelse(ORGPRESS_FLAVOR,html,
+                       [[[ORGPRESS_FANCY_FIGURE_HTML($1,$2)]]],
+                       [[[ORGPRESS_FANCY_FIGURE_ORG($1,$2)]]])]]])
+
+
+m4_define([[[ORGPRESS_FANCY_FIGURE_HTML]]],
 [[[#+BEGIN_HTML
 <div class="figure">
   <img src="$1" alt="$2"/>
@@ -22,6 +28,13 @@ m4_define([[[ORGPRESS_FANCY_FIGURE]]],
 </div>
 #+END_HTML
 ]]])
+
+# Just put the figure back in as normal Org-Mode text
+m4_define([[[ORGPRESS_FANCY_FIGURE_ORG]]],
+[[[#+CAPTION: $2
+[[$1]]
+]]])
+
 
 #- Output a code listing. Note: caption argument is now IGNORED.
 m4_define([[[ORGPRESS_LISTING]]],
