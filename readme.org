@@ -1,8 +1,40 @@
 * OrgPress
-  These are the makefiles and scripts I use to turn org-mode manuscripts into nicely formatted HTML, PDF, Epub, and Mobi (Kindle) formats.
+  These are the makefiles and scripts I use to turn org-mode
+  manuscripts into nicely formatted HTML, PDF, Epub, and Mobi (Kindle)
+  formats.
 
-  *Warning*: these are presented as-is. They are undocumented, unwarrantied, and messy. 
+  *Warning*: these are presented as-is. They are undocumented,
+   unwarrantied, and messy.
 
   *Caution*: contents may contain trace amounts of AWK and M4. 
 
+** Legal
+   Unless otherwise explicitly noted, all files in OrgPress are \copy
+   2012 Avdi Grimm, and are distributed under the terms of the GPL
+   v3. See below for details.
+
+   Why GPL? Simply this: I could have kept these scripts as my "secret
+   sauce" for building eBooks; but I didn't. You, in turn, are free to
+   use them to use them to generate eBooks and sell those books for
+   piles of money; and I sincerely hope that you do. But if you make
+   any improvements or extensions to these scripts in the process,
+   they must be made freely available just as I've made the originals
+   available. I think that's a fair deal.
+
+   Now, on to the legalese:
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+   
 
