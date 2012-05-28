@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+require 'pathname'
+require 'yaml'
+
+ORGPRESS_ROOT     = (Pathname(__FILE__).dirname + "..")
+ORGPRESS_MAKEFILE = ORGPRESS_ROOT + "main.mk"
+BOOK_SPEC         = Pathname("book.yml").expand_path
+
+env = YAML.load_file(BOOK_SPEC).each_with_object({}) do |(key, value), env|
+  env["OP_#{key.upcase}"] = Array(value).join(" ")
+end
+
+make_args = %W(-f #{ORGPRESS_MAKEFILE}) + ARGV
+exec(env, "make", *make_args)

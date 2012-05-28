@@ -1,0 +1,3 @@
+rvm use --create 1.9.3@orgpress
+rvm gemset import
+bundle install --binstubs

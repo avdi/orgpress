@@ -1,0 +1,10 @@
+/.bundle/config
+/bin/autospec
+/bin/cucumber
+/bin/guard
+/bin/htmldiff
+/bin/ldiff
+/bin/rake2thor
+/bin/rspec
+/bin/thor
+/tmp

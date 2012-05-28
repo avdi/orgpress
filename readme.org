@@ -8,6 +8,28 @@
 
   *Caution*: contents may contain trace amounts of AWK and M4. 
 
+
+** Stages
+
+*** Pull Dependencies
+
+*** Normalize Inputs
+    Convert non-org files to org.
+
+*** Skeletonize
+
+*** Prepare Objects
+    
+*** Assemble Master
+
+*** Export
+
+*** Convert
+    
+*** Build Package
+
+*** Distribute
+
 ** Legal
    Unless otherwise explicitly noted, all files in OrgPress are \copy
    2012 Avdi Grimm, and are distributed under the terms of the GPL
