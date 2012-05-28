@@ -5,9 +5,17 @@ require 'yaml'
 ORGPRESS_ROOT     = (Pathname(__FILE__).dirname + "..")
 ORGPRESS_MAKEFILE = ORGPRESS_ROOT + "main.mk"
 BOOK_SPEC         = Pathname("book.yml").expand_path
+BOOK_DIR          = BOOK_SPEC.dirname
+BOOK_DIRNAME      = BOOK_DIR.basename.to_s
 
-env = YAML.load_file(BOOK_SPEC).each_with_object({}) do |(key, value), env|
-  env["OP_#{key.upcase}"] = Array(value).join(" ")
+env = {
+  "OP_BOOK_NAME" => BOOK_DIRNAME
+}
+
+if BOOK_SPEC.exist?
+  YAML.load_file(BOOK_SPEC).each do |key, value|
+    env["OP_#{key.upcase}"] = Array(value).join(" ")
+  end
 end
 
 make_args = %W(-f #{ORGPRESS_MAKEFILE}) + ARGV

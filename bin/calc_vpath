@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# Usage: calc_vpath <BOOK_DIR> <STAGE> <PLATFORM> <STAGES...>
+
+book_dir = ARGV.shift
+stage    = ARGV.shift
+platform = ARGV.shift
+stages   = ARGV
+stage_index = stages.index(stage)
+previous_stages = stages[0..stage_index].reverse
+vpath = []
+previous_stages.each do |stage|
+  vpath << File.join(book_dir, "build", stage, platform)
+  vpath << File.join(book_dir, "build", stage, "neutral")
+end
+vpath << File.join(book_dir, platform)
+vpath << book_dir
+print vpath.uniq.join(":")

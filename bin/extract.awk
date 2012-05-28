@@ -15,7 +15,7 @@ BEGIN {
 function start_listing()
 {
     ++listing_count 
-    ("basename " FILENAME " .org") | getline basename 
+    ("basename " FILENAME " .monolith") | getline basename 
     formatted_count = sprintf("%03d", listing_count)
     listing_name    = (basename "-" formatted_count)
     listing_file    = (listings_dir "/" listing_name ".listing")
@@ -30,11 +30,11 @@ function start_listing()
 
 function print_metadata(file)
 {
+    ("basename " FILENAME) | getline source_name
     ORS = "\r\n"
-    print "filename: " FILENAME >file
+    print "filename: " source_name >file
     print "number: " listing_count >file
     print "name: " listing_name >file
-    print "flavor: " FLAVOR >file
     if(caption)
         print "caption: " caption >file
     print "" >file

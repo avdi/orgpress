@@ -4,7 +4,7 @@ MAKEFLAGS		= --no-builtin-rules
 OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
 
 # The OrgPress root directory
-export OP_ROOT		:= $(dir $(OP_MAKEFILE))
+export OP_ROOT		:= $(abspath $(dir $(OP_MAKEFILE)))
 
 export OP_PLATFORM_LIST = epub kindle web text
 
@@ -19,12 +19,16 @@ export OP_LIB_DIR	:= $(abspath $(OP_ROOT)/lib)
 # The name (for file naming purposes) of the book being built
 export OP_BOOK_NAME	?= $(notdir $(OP_BOOK_DIR))
 
+export OP_SOURCES 	?= $(OP_BOOK_NAME).org
+
 # We use the bookbinding meaning of "signature", to mean "a section
 # that contains text".
-export OP_SIGNATURE_NAMES ?= $(OP_BOOK_NAME)
+export OP_SIGNATURE_NAMES ?= $(basename $(OP_SOURCES))
 
 # The list of stages
-STAGES			:= normalize
+STAGES			:= normalize concatenate extract
+
+CALC_VPATH		= $(OP_ROOT)/bin/calc_vpath
 
 ################################################################################
 # FUNCTIONS
@@ -45,7 +49,8 @@ $(MAKE) -C $(call platform_build_dir,$1,$2)
 	VPATH=$(call stage_vpath,$1,$2)
 endef
 
-stage_vpath		= $(call stage_neutral_dir,$1):$(call source_platform_dir,$2):$(OP_BOOK_DIR)
+# $(call stage_vpath,<STAGE>,<PLATFORM>)
+stage_vpath		= $(shell $(CALC_VPATH) $(OP_BOOK_DIR) $1 $2 $(STAGES))
 
 stage_neutral_dir       = $(call platform_build_dir,$1,neutral)
 
