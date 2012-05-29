@@ -1,15 +1,32 @@
 #!/usr/bin/env ruby
-# Usage: calc_vpath <BOOK_DIR> <STAGE> <PLATFORM> <STAGES...>
+# Usage: calc_vpath [OPTIONS] <BOOK_DIR> <STAGE> <PLATFORM> <STAGES...>
 
-book_dir = ARGV.shift
-stage    = ARGV.shift
-platform = ARGV.shift
-stages   = ARGV
-stage_index = stages.index(stage)
-previous_stages = stages[0..stage_index].reverse
+# A tool for calculating VPATHs for stage makefiles. A VPATH is a
+# search path for prerequisites.
+
+require 'optparse'
+
+include_current  = true
+
+OptionParser.new do |options|
+  options.on("--[no-]include-current", "Include paths from current stage") do |value|
+    include_current = value
+  end
+end.parse!
+
+book_dir         = ARGV.shift
+stage            = ARGV.shift
+platform         = ARGV.shift
+stages           = ARGV
+stage_index      = stages.index(stage)
+
+last_stage_index = include_current ? stage_index : (stage_index - 1)
+previous_stages  = stages[0..last_stage_index].reverse
 vpath = []
 previous_stages.each do |stage|
   vpath << File.join(book_dir, "build", stage, platform)
+  # Always include the neutral platform directory as well as the
+  # platform-specific path
   vpath << File.join(book_dir, "build", stage, "neutral")
 end
 vpath << File.join(book_dir, platform)

@@ -68,6 +68,12 @@ Feature: Extract objects
     #+END_SRC
 
     """
+    And the file "build/extract/neutral/LISTINGS" should contain exactly:
+    """
+    the-foo-book-001.listing
+    the-foo-book-002.listing
+
+    """
 
   Scenario: Extract figures
     Given a file named "book.yml" with:

@@ -1,4 +1,4 @@
-MAKEFLAGS		= --no-builtin-rules
+MAKEFLAGS		+= --no-builtin-rules
 
 # Path to this file
 OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
@@ -6,7 +6,7 @@ OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
 # The OrgPress root directory
 export OP_ROOT		:= $(abspath $(dir $(OP_MAKEFILE)))
 
-export OP_PLATFORM_LIST = epub kindle web text
+export OP_PLATFORM_LIST = epub kindle web text pdf
 
 # The book project root directory
 export OP_BOOK_DIR	:= $(abspath $(CURDIR))
@@ -26,7 +26,7 @@ export OP_SOURCES 	?= $(OP_BOOK_NAME).org
 export OP_SIGNATURE_NAMES ?= $(basename $(OP_SOURCES))
 
 # The list of stages
-STAGES			:= normalize concatenate extract
+export OP_STAGES	:= normalize concatenate extract prepare-objects
 
 CALC_VPATH		= $(OP_ROOT)/bin/calc_vpath
 
@@ -46,11 +46,10 @@ $(MAKE) -C $(call platform_build_dir,$1,$2)
 	-f $(call stage_makefile,$1)
 	OP_STAGE=$1
 	OP_PLATFORM=$2
-	VPATH=$(call stage_vpath,$1,$2)
 endef
 
 # $(call stage_vpath,<STAGE>,<PLATFORM>)
-stage_vpath		= $(shell $(CALC_VPATH) $(OP_BOOK_DIR) $1 $2 $(STAGES))
+stage_vpath		= $(shell $(CALC_VPATH) $(OP_BOOK_DIR) $1 $2 $(OP_STAGES))
 
 stage_neutral_dir       = $(call platform_build_dir,$1,neutral)
 
@@ -62,18 +61,18 @@ source_platform_dir     = $(abspath $(OP_BOOK_DIR)/$1)
 
 
 # The stages are all virtual targets
-.PHONY: $(STAGES) neutral
+.PHONY: $(OP_STAGES) neutral
 
 ################################################################################
 # RULES
 ################################################################################
 
 ifdef OP_PLATFORM
-$(STAGES):
+$(OP_STAGES):
 	$(strip $(call build_stage_command,$@,neutral))
 	$(strip $(call build_stage_command,$@,$(OP_PLATFORM)))
 else
-$(STAGES):
+$(OP_STAGES):
 	for platform in $(OP_PLATFORM_LIST); do \
 	  $(MAKE) -f $(OP_MAKEFILE) OP_PLATFORM=$${platform} $@;\
 	done

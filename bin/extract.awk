@@ -10,16 +10,19 @@ BEGIN {
     # Ignore case in all regexps
     IGNORECASE = 1 
     caption_pattern = /^[[:space:]]*#\+CAPTION:/
+    listings_file   = "LISTINGS"
 }
 
 function start_listing()
 {
     ++listing_count 
     ("basename " FILENAME " .monolith") | getline basename 
-    formatted_count = sprintf("%03d", listing_count)
-    listing_name    = (basename "-" formatted_count)
-    listing_file    = (listings_dir "/" listing_name ".listing")
+    formatted_count  = sprintf("%03d", listing_count)
+    listing_name     = (basename "-" formatted_count)
+    listing_basename = (listing_name ".listing")
+    listing_file     = (listings_dir "/" listing_basename)
     system("rm " listing_file "> /dev/null 2>&1")
+    print listing_basename >listings_file
     print_metadata(listing_file)
     if(caption)
         print "ORGPRESS_LISTING(" listing_name ",[[[" caption  "]]])"
