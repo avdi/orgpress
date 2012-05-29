@@ -29,7 +29,7 @@ Feature: Normalize Stage
     
     This paragraph is above the code listing.
 
-    #+BEGIN_SRCruby
+    #+BEGIN_SRC ruby
         def foo
           puts "hello, world"
         end
