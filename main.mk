@@ -21,9 +21,13 @@ export OP_BOOK_NAME	?= $(notdir $(OP_BOOK_DIR))
 
 export OP_SOURCES 	?= $(OP_BOOK_NAME).org
 
+export OP_FRONTMATTER	?= $(OP_LIB_DIR)/basic-frontmatter.org
+
 # We use the bookbinding meaning of "signature", to mean "a section
 # that contains text".
-export OP_SIGNATURE_NAMES ?= $(basename $(OP_SOURCES))
+export OP_SIGNATURE_NAMES ?= $(basename $(OP_FRONTMATTER)) \
+			     $(basename $(OP_SOURCES))     \
+                             $(basename $(OP_BACKMATTER))
 
 # The list of stages
 export OP_STAGES	:= normalize concatenate extract prepare-objects
