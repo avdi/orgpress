@@ -8,11 +8,12 @@ Feature: Concatenate signatures
       - chapter1.markdown
       - chapter2.org
     """
-    And a file named "chapter1.markdown" with:
+    And a file named "build/normalize/neutral/chapter1.org" with:
     """
-    # Chapter 1: Hello world
-      
-    Lorem ipsum dolor sit amet, consectetuer adipiscing elit. 
+    * Chapter 1: Hello world
+    
+    Lorem ipsum dolor sit amet, consectetuer adipiscing elit.
+
     """
     And a file named "chapter2.org" with:
     """
@@ -29,8 +30,6 @@ Feature: Concatenate signatures
     This paragraph is below the code listing.
 
     """
-    When I run `orgpress normalize`
-    Then the exit status should be 0
     When I run `orgpress concatenate`
     Then the exit status should be 0
     Then a directory named "build/concatenate" should exist
