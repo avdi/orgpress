@@ -39,5 +39,44 @@ Feature: Normalize Stage
 
     """
 
+  Scenario: Normalize front and back matter
+    Given a file named "book.yml" with:
+    """
+    book_name: the-foo-book
+    frontmatter:
+      - preface.markdown
+    sources:
+      - chapter1.org
+    backmatter:
+      - back.markdown
+    """
+    And a file named "preface.markdown" with:
+    """
+    # Preface
+
+    """
+    And a file named "chapter1.org" with:
+    """
+    * Chapter 1
     
+    This is the body.
+
+    """
+    And a file named "back.markdown" with:
+    """
+    # Bibliography
+
+    """
+    When I run `orgpress normalize`
+    Then the exit status should be 0
+    And the file "build/normalize/neutral/preface.org" should contain exactly:
+    """
+    * Preface
     
+    """
+    And the file "build/normalize/neutral/back.org" should contain exactly:
+    """
+    * Bibliography
+    
+    """
+
