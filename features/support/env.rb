@@ -2,6 +2,11 @@ require 'aruba/cucumber'
 ENV['PATH'] = File.expand_path('../../bin',File.dirname(__FILE__)) +
   File::PATH_SEPARATOR + ENV['PATH'].to_s
 
-Before do
+Before('@slow') do
+  @old_io_wait_seconds = @aruba_io_wait_seconds
   @aruba_io_wait_seconds = 5
+end
+
+After('@slow') do
+  @aruba_io_wait_seconds = @old_io_wait_seconds
 end

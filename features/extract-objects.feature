@@ -1,3 +1,4 @@
+@slow
 Feature: Extract objects
 
   Scenario: Extract source listings
@@ -36,7 +37,7 @@ Feature: Extract objects
 
     ORGPRESS_LISTING(the-foo-book-001)
 
-    ORGPRESS_LISTING(the-foo-book-002,[[[goodbye in ruby]]])
+    ORGPRESS_LISTING(the-foo-book-002,«goodbye in ruby»)
 
     This paragraph is below the code listing.
 
@@ -102,7 +103,7 @@ Feature: Extract objects
 
     Some text...
 
-    ORGPRESS_FIGURE(./bar.png,[[[caption for bar]]])
+    ORGPRESS_FIGURE(./bar.png,«caption for bar»)
 
     """
 

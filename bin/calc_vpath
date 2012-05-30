@@ -1,23 +1,40 @@
 #!/usr/bin/env ruby
-# Usage: calc_vpath [OPTIONS] <BOOK_DIR> <STAGE> <PLATFORM> <STAGES...>
-
 # A tool for calculating VPATHs for stage makefiles. A VPATH is a
 # search path for prerequisites.
 
 require 'optparse'
+require 'pathname'
 
 include_current  = true
+book_dir         = ENV.fetch("OP_BOOK_DIR"){Dir.pwd}
+stage            = ENV.fetch("OP_STAGE"){"finished"}
+platform         = ENV.fetch("OP_PLATFORM"){"neutral"}
+stages           = ENV.fetch("OP_STAGES"){""}.split
+absolute         = false
 
 OptionParser.new do |options|
   options.on("--[no-]include-current", "Include paths from current stage") do |value|
     include_current = value
   end
+  options.on("--book-dir DIR", "The book project root directory") do |value|
+    book_dir = value
+  end
+  options.on("--stage STAGE", "The current stage") do |value|
+    stage = value
+  end
+  options.on("--platform PLATFORM", "The current platform") do |value|
+    platform = value
+  end
+  options.on("--stages a,b,c", Array, "The defined stages") do |value|
+    stages = value
+  end
+  options.on("--[no-]absolute", "Output an absolute path") do |value|
+    absolute = value
+  end
 end.parse!
 
-book_dir         = ARGV.shift
-stage            = ARGV.shift
-platform         = ARGV.shift
-stages           = ARGV
+mode = ARGV.shift || :vpath
+
 stage_index      = stages.index(stage)
 
 last_stage_index = include_current ? stage_index : (stage_index - 1)
@@ -31,4 +48,25 @@ previous_stages.each do |stage|
 end
 vpath << File.join(book_dir, platform)
 vpath << book_dir
-print vpath.uniq.join(":")
+
+case mode.to_sym
+when :vpath
+  print vpath.uniq.join(":")
+when :which
+  file = ARGV.shift
+  result = vpath.each do |path|
+    candidate = Pathname(path) + file
+    if candidate.exist?
+      if absolute
+        puts candidate
+      else
+        puts candidate.relative_path_from(Pathname(book_dir).expand_path)
+      end
+      puts
+      exit 0
+    end
+  end
+  exit 1
+else
+  raise NotImplementedError, "Unknown mode '#{mode}'"
+end

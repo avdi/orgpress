@@ -6,7 +6,7 @@ OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
 # The OrgPress root directory
 export OP_ROOT		:= $(abspath $(dir $(OP_MAKEFILE)))
 
-export OP_PLATFORM_LIST = epub kindle web text pdf
+export OP_PLATFORM_LIST = epub kindle web text pdf html
 
 # The book project root directory
 export OP_BOOK_DIR	:= $(abspath $(CURDIR))
@@ -28,9 +28,6 @@ export OP_FRONTMATTER	?= $(OP_LIB_DIR)/basic-frontmatter.org
 export OP_SIGNATURE_NAMES ?= $(basename $(OP_FRONTMATTER)) \
 			     $(basename $(OP_SOURCES))     \
                              $(basename $(OP_BACKMATTER))
-
-# The list of stages
-export OP_STAGES	:= normalize concatenate extract prepare-objects
 
 CALC_VPATH		= $(OP_ROOT)/bin/calc_vpath
 
@@ -65,7 +62,7 @@ source_platform_dir     = $(abspath $(OP_BOOK_DIR)/$1)
 
 
 # The stages are all virtual targets
-.PHONY: $(OP_STAGES) neutral
+.PHONY: $(OP_STAGES) neutral which
 
 ################################################################################
 # RULES

@@ -1,5 +1,5 @@
-#+TITLE: ORGPRESS_BOOK_TITLE
-#+AUTHOR: ORGPRESS_AUTHORS
+#+TITLE: OP_TITLE
+#+AUTHOR: OP_AUTHOR
 #+LaTeX_HEADER: \input{orgpress_headers}
 #+LaTeX: \tableofcontents
 #+LaTeX: \listoflistings

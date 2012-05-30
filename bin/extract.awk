@@ -25,7 +25,7 @@ function start_listing()
     print listing_basename >listings_file
     print_metadata(listing_file)
     if(caption)
-        print "ORGPRESS_LISTING(" listing_name ",[[[" caption  "]]])"
+        print "ORGPRESS_LISTING(" listing_name ",«" caption  "»)"
     else
         print "ORGPRESS_LISTING(" listing_name ")"
     caption = ""
@@ -59,7 +59,7 @@ function print_metadata(file)
     match($0, /\[\[(.*)]\]/, matches)
     figure_file = matches[1]
     if(caption)
-        print "ORGPRESS_FIGURE(" figure_file ",[[[" caption  "]]])"
+        print "ORGPRESS_FIGURE(" figure_file ",«" caption  "»)"
     else
         print "ORGPRESS_FIGURE(" figure_file ")"
     caption = ""

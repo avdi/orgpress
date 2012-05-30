@@ -1,3 +1,4 @@
+@slow
 Feature: Concatenate signatures
 
   Scenario: Concatenate signatures into a single file
@@ -36,8 +37,8 @@ Feature: Concatenate signatures
     And a directory named "build/concatenate/neutral" should exist
     And the file "build/concatenate/neutral/the-foo-book.monolith" should contain exactly:
     """
-    #+TITLE: ORGPRESS_BOOK_TITLE
-    #+AUTHOR: ORGPRESS_AUTHORS
+    #+TITLE: OP_TITLE
+    #+AUTHOR: OP_AUTHOR
     #+LaTeX_HEADER: \input{orgpress_headers}
     #+LaTeX: \tableofcontents
     #+LaTeX: \listoflistings

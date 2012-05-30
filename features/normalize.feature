@@ -1,3 +1,4 @@
+@slow
 Feature: Normalize Stage
 
   Scenario: Convert markdown to org

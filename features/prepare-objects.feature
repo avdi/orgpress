@@ -1,3 +1,4 @@
+@slow
 Feature: Prepare objects
 
   Scenario: Split long lines
