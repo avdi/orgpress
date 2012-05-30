@@ -51,7 +51,7 @@
               (with-temp-buffer
                 (insert-file-contents 
                  (or 
-                  (getenv "STYLESHEET")
+                  (getenv "OP_STYLESHEET")
                   (error "No $STYLESHEET set")))
                 (buffer-string))
               "\n</style>\n"))
@@ -68,8 +68,8 @@
 	       ("\\subsection{%s}" . "\\subsection*{%s}")
 	       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
 	       ("\\paragraph{%s}" . "\\paragraph*{%s}")))
-(setq cover-file (or (getenv "PDF_COVER") "cover.pdf"))
-(setq cover-file-opts (or (getenv "PDF_COVER_OPTS") "pages=1, noautoscale=true"))
+(setq cover-file (or (getenv "OP_PDF_COVER") "cover.pdf"))
+(setq cover-file-opts (or (getenv "OP_PDF_COVER_OPTS") "pages=1, noautoscale=true"))
 (when (and (stringp cover-file) 
            (not (string= cover-file ""))
            (file-exists-p cover-file))
@@ -81,19 +81,19 @@
                 "}")))
 
 (set-variable 'org-export-html-preamble
-              (orgpress-env-file-contents "HTML_PREAMBLE_FILE" 
+              (orgpress-env-file-contents "OP_HTML_PREAMBLE_FILE" 
                                           org-export-html-preamble))
 (set-variable 'org-export-html-postamble
-              (orgpress-env-file-contents "HTML_POSTAMBLE_FILE" 
+              (orgpress-env-file-contents "OP_HTML_POSTAMBLE_FILE" 
                                           org-export-html-preamble))
 
 (setcdr (assq 'sdepth org-infojs-options) 
-        (orgpress-get-var "INFOJS_SECTION_DEPTH" "max"))
+        (orgpress-get-var "OP_INFOJS_SECTION_DEPTH" "max"))
 
 (setcdr (assq 'buttons org-infojs-options) 
-        (orgpress-get-var "INFOJS_BUTTONS" "0"))
+        (orgpress-get-var "OP_INFOJS_BUTTONS" "0"))
 
 (setcdr (assq 'path org-infojs-options) 
-        (orgpress-get-var "INFOJS_PATH" "http://orgmode.org/org-info.js"))
+        (orgpress-get-var "OP_INFOJS_PATH" "http://orgmode.org/org-info.js"))
 
 

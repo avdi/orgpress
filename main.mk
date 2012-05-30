@@ -6,7 +6,7 @@ OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
 # The OrgPress root directory
 export OP_ROOT		:= $(abspath $(dir $(OP_MAKEFILE)))
 
-export OP_PLATFORM_LIST = epub kindle web text pdf html
+export OP_PLATFORM_LIST = neutral epub kindle web text pdf html
 
 # The book project root directory
 export OP_BOOK_DIR	:= $(abspath $(CURDIR))
@@ -70,7 +70,6 @@ source_platform_dir     = $(abspath $(OP_BOOK_DIR)/$1)
 
 ifdef OP_PLATFORM
 $(OP_STAGES):
-	$(strip $(call build_stage_command,$@,neutral))
 	$(strip $(call build_stage_command,$@,$(OP_PLATFORM)))
 else
 $(OP_STAGES):

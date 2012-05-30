@@ -10,7 +10,7 @@ BOOK_SPEC         = Pathname("book.yml").expand_path
 BOOK_DIR          = BOOK_SPEC.dirname
 BOOK_DIRNAME      = BOOK_DIR.basename.to_s
 STAGES            = %w[
-  normalize concatenate extract prepare-objects expand finished
+  normalize concatenate extract prepare-objects expand export finished
 ]
 
 path = "#{ORGPRESS_BIN}#{File::PATH_SEPARATOR}#{ENV['PATH']}"

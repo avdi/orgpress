@@ -1,3 +1,4 @@
+# -*- mode: org -*-
 #+TITLE: OP_TITLE
 #+AUTHOR: OP_AUTHOR
 #+LaTeX_HEADER: \input{orgpress_headers}

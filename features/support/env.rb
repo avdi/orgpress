@@ -10,3 +10,12 @@ end
 After('@slow') do
   @aruba_io_wait_seconds = @old_io_wait_seconds
 end
+
+Before('@reallyslow') do
+  @old_io_wait_seconds = @aruba_io_wait_seconds
+  @aruba_io_wait_seconds = 10
+end
+
+After('@reallyslow') do
+  @aruba_io_wait_seconds = @old_io_wait_seconds
+end
