@@ -47,6 +47,7 @@ $(MAKE) -C $(call platform_build_dir,$1,$2)
 	-f $(call stage_makefile,$1)
 	OP_STAGE=$1
 	OP_PLATFORM=$2
+	default
 endef
 
 # $(call stage_vpath,<STAGE>,<PLATFORM>)

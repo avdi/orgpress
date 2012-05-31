@@ -80,8 +80,6 @@ endef
 # VPATH is a special variable which determines the search path for prerequisites
 VPATH		= $(call stage_platform_vpath,$(OP_STAGE),$(OP_PLATFORM))
 
-$(info VPATH: $(VPATH))
-
 ################################################################################
 # RULES
 ################################################################################
@@ -93,4 +91,3 @@ ifndef outputs
 endif
 
 default: $(outputs)
-

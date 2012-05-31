@@ -8,17 +8,20 @@ ORGPRESS_MAKEFILE = ORGPRESS_ROOT + "main.mk"
 CALC_VPATH        = (ORGPRESS_BIN + "calc_vpath")
 BOOK_SPEC         = Pathname("book.yml").expand_path
 BOOK_DIR          = BOOK_SPEC.dirname
+VENDOR_DIR        = BOOK_DIR + "vendor"
 BOOK_DIRNAME      = BOOK_DIR.basename.to_s
 STAGES            = %w[
-  normalize concatenate extract prepare-objects expand export finished
+  fetch-prerequisites normalize concatenate extract prepare-objects expand
+  export convert package distribute finished
 ]
 
 path = "#{ORGPRESS_BIN}#{File::PATH_SEPARATOR}#{ENV['PATH']}"
 
 env = {
-  "OP_BOOK_NAME" => BOOK_DIRNAME,
-  "OP_STAGES"    => STAGES.join(" "),
-  "PATH"         => path
+  "OP_BOOK_NAME"  => BOOK_DIRNAME,
+  "OP_STAGES"     => STAGES.join(" "),
+  "PATH"          => path,
+  "OP_VENDOR_DIR" => VENDOR_DIR.to_s
 }
 
 
@@ -29,7 +32,7 @@ if BOOK_SPEC.exist?
 end
 
 case ARGV.first
-when "which"
+when "which", "vpath"
   exec(env, CALC_VPATH.to_s, *ARGV)
 else
   make_args = %W(-f #{ORGPRESS_MAKEFILE}) + ARGV

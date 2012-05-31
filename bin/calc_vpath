@@ -6,10 +6,11 @@ require 'optparse'
 require 'pathname'
 
 include_current  = true
-book_dir         = ENV.fetch("OP_BOOK_DIR"){Dir.pwd}
-stage            = ENV.fetch("OP_STAGE"){"finished"}
-platform         = ENV.fetch("OP_PLATFORM"){"neutral"}
-stages           = ENV.fetch("OP_STAGES"){""}.split
+book_dir         = ENV.fetch("OP_BOOK_DIR")   { Dir.pwd }
+vendor_dir       = ENV.fetch("OP_VENDOR_DIR") { File.join(book_dir,"vendor") }
+stage            = ENV.fetch("OP_STAGE")      { "finished" }
+platform         = ENV.fetch("OP_PLATFORM")   { "neutral" }
+stages           = ENV.fetch("OP_STAGES")     { "" }.split
 absolute         = false
 
 OptionParser.new do |options|
@@ -18,6 +19,9 @@ OptionParser.new do |options|
   end
   options.on("--book-dir DIR", "The book project root directory") do |value|
     book_dir = value
+  end
+  options.on("--vendor-dir DIR", "The vendor directory") do |value|
+    vendor_dir = value
   end
   options.on("--stage STAGE", "The current stage") do |value|
     stage = value
@@ -48,6 +52,7 @@ previous_stages.each do |stage|
 end
 vpath << File.join(book_dir, platform)
 vpath << book_dir
+vpath << vendor_dir
 
 case mode.to_sym
 when :vpath
