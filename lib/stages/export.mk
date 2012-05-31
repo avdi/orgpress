@@ -19,6 +19,8 @@ endif
 ################################################################################
 EXPORT_FORMAT_EXTENSION ?= $(OP_FORMAT)
 
+ORG_FORMAT_NAME		?= $(OP_FORMAT)
+
 outputs			= $(OP_BOOK_NAME).$(EXPORT_FORMAT_EXTENSION)
 
 # Org export customizations
@@ -37,7 +39,7 @@ define export_elisp
 (progn
 	(org-mode)
 	(cd "$(CURDIR)")
-	(org-export-as-$(OP_FORMAT)
+	(org-export-as-$(ORG_FORMAT_NAME)
 		$(OP_HEADLINE_LEVELS) 
 		nil 
 		(quote ($(export_plist))))
@@ -50,10 +52,4 @@ define emacs_export_command
 		 --eval '$(strip $(export_elisp))'
 endef
 
-################################################################################
-# RULES
-################################################################################
-
-$(OP_BOOK_NAME).$(EXPORT_FORMAT_EXTENSION): $(OP_BOOK_NAME).master
-	$(emacs_export_command)
 

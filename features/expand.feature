@@ -1,4 +1,4 @@
-@slow
+@reallyslow
 Feature: Expand stage
 
   Scenario: Expand macros

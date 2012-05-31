@@ -37,6 +37,7 @@ Feature: Concatenate signatures
     And a directory named "build/concatenate/neutral" should exist
     And the file "build/concatenate/neutral/the-foo-book.monolith" should contain exactly:
     """
+    # -*- mode: org -*-
     #+TITLE: OP_TITLE
     #+AUTHOR: OP_AUTHOR
     #+LaTeX_HEADER: \input{orgpress_headers}

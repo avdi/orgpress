@@ -69,9 +69,18 @@ endef
 # STAGE-SPECIFIC IMPLEMENTATION
 ################################################################################
 
+# First, load definitions that apply for the platform at any stage
 -include $(OP_LIB_DIR)/platforms/$(OP_PLATFORM).mk
+
+# Next, definitions that apply to the stage, independent of platform
 -include $(OP_LIB_DIR)/stages/$(OP_STAGE).mk
+
+# Next, definitions that apply to only this combination of stage and platform
 -include $(OP_LIB_DIR)/stages/$(OP_STAGE)/$(OP_PLATFORM).mk
+
+# Sometimes rules need to be deferred until ALL variable definitions
+# have been made.
+-include $(OP_LIB_DIR)/stages/$(OP_STAGE)/rules.mk
 
 ################################################################################
 # SETUP
