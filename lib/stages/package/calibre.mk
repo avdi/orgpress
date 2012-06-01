@@ -22,6 +22,32 @@ define CONVERTFLAGS
 --extra-css $(CALIBRE_STYLESHEET)
 endef
 
+################################################################################
+# VARIABLES
+################################################################################
+
+ASSET_ROOTS			= $(OP_BOOK_DIR) $(OP_BOOK_DIR)/$(OP_PLATFORM)
+
+LOCAL_ASSETS			= $(addprefix $(abspath $(CURDIR))/,$(RELATIVE_ASSETS))
+
+define RELATIVE_ASSETS
+$(strip $(foreach root,
+                  $(ASSET_ROOTS),
+                  $(patsubst $(root)/%,
+                             %,
+                             $(wildcard $(OP_ASSETS:%=$(root)/%)))))
+endef
+
+define SOURCE_ASSETS
+$(strip $(foreach root,
+                  $(ASSET_ROOTS),
+                  $(wildcard $(OP_ASSETS:%=$(root)/%))))
+endef
+
+$(info LOCAL_ASSETS=$(LOCAL_ASSETS))
+$(info SOURCE_ASSETS=$(SOURCE_ASSETS))
+
+
 CALIBRE_STYLESHEET		= $(OP_LIB_DIR)/calibre.css
 
 outputs				= $(OP_BOOK_NAME).$(CONVERT_FORMAT_EXTENSION)

@@ -8,7 +8,14 @@ Feature: Package files to platform target formats
     Given a file named "book.yml" with:
     """
     book_name: the-foo-book
+    assets:
+      - images/*.jpg
+      - fonts/myfont.otf
     """
+    And a file named "images/foo.jpg"
+    And a file named "images/bar.txt"
+    And a file named "junk/junk.txt"
+    And a file named "fonts/myfont.otf"
     And a file named "build/export/html/the-foo-book.html" with:
     """
     <html>
@@ -16,6 +23,7 @@ Feature: Package files to platform target formats
       <body>
         <h1>Chapter 1</h1>
         <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+        <img src="./images/foo.jpg"/>
       </body>
     </html>
     """
@@ -26,6 +34,7 @@ Feature: Package files to platform target formats
       <body>
         <h1>Chapter 1</h1>
         <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+        <img src="./images/foo.jpg"/>
       </body>
     </html>
     """
@@ -36,6 +45,7 @@ Feature: Package files to platform target formats
       <body>
         <h1>Chapter 1</h1>
         <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+        <img src="./images/foo.jpg"/>
       </body>
     </html>
     """
@@ -75,6 +85,12 @@ Feature: Package files to platform target formats
     And a file named "build/package/html/the-foo-book.html.zip" should exist
     When I unpack "build/package/epub/the-foo-book.epub" into "unpack-epub"
     Then a file named "unpack-epub/the-foo-book.html" should exist
+    Then a file named "unpack-epub/foo.jpg" should exist
+    Then a file named "unpack-epub/fonts/myfont.otf" should exist
+    Then a file named "unpack-epub/images/bar.txt" should not exist
+    Then a file named "unpack-epub/junk/junk.txt" should not exist
     When I unpack "build/package/html/the-foo-book.html.zip" into "unpack-html"
     Then a file named "unpack-html/the-foo-book.html" should exist
+    Then a file named "unpack-html/images/foo.jpg" should exist
+    Then a file named "unpack-html/fonts/myfont.otf" should exist
     

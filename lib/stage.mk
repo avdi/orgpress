@@ -66,6 +66,13 @@ $(shell $(CALC_VPATH) $(CALC_VPATH_FLAGS) --book-dir $(OP_BOOK_DIR) --stage $1 -
 endef
 
 ################################################################################
+# SETUP
+################################################################################
+
+# VPATH is a special variable which determines the search path for prerequisites
+VPATH		= $(call stage_platform_vpath,$(OP_STAGE),$(OP_PLATFORM))
+
+################################################################################
 # STAGE-SPECIFIC IMPLEMENTATION
 ################################################################################
 
@@ -84,13 +91,6 @@ endef
 
 # ...and some rules are platform-specific
 -include $(OP_LIB_DIR)/stages/$(OP_STAGE)/$(OP_PLATFORM)/rules.mk
-
-################################################################################
-# SETUP
-################################################################################
-
-# VPATH is a special variable which determines the search path for prerequisites
-VPATH		= $(call stage_platform_vpath,$(OP_STAGE),$(OP_PLATFORM))
 
 ################################################################################
 # RULES
