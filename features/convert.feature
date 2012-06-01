@@ -1,4 +1,4 @@
-@reallyslow
+@slow
 Feature: Convert files to platform target formats
 
   Background:
@@ -62,5 +62,6 @@ Feature: Convert files to platform target formats
     Then a file named "build/convert/kindle/the-foo-book.mobi" should exist
     And a file named "build/convert/epub/the-foo-book.epub" should exist
     And a file named "build/convert/pdf/the-foo-book.pdf" should exist
-    When I unpack "build/convert/epub/the-foo-book.epub"
+    When I unpack "build/convert/epub/the-foo-book.epub" into "unpack"
+    Then a file named "unpack/the-foo-book.html" should exist
     
