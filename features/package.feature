@@ -9,6 +9,16 @@ Feature: Package files to platform target formats
     """
     book_name: the-foo-book
     """
+    And a file named "build/export/html/the-foo-book.html" with:
+    """
+    <html>
+      <head><title>The Foo Book</title></head>
+      <body>
+        <h1>Chapter 1</h1>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
+      </body>
+    </html>
+    """
     And a file named "build/export/kindle/the-foo-book.html" with:
     """
     <html>
@@ -62,6 +72,9 @@ Feature: Package files to platform target formats
     Then a file named "build/package/kindle/the-foo-book.mobi" should exist
     And a file named "build/package/epub/the-foo-book.epub" should exist
     And a file named "build/package/pdf/the-foo-book.pdf" should exist
-    When I unpack "build/package/epub/the-foo-book.epub" into "unpack"
-    Then a file named "unpack/the-foo-book.html" should exist
+    And a file named "build/package/html/the-foo-book.html.zip" should exist
+    When I unpack "build/package/epub/the-foo-book.epub" into "unpack-epub"
+    Then a file named "unpack-epub/the-foo-book.html" should exist
+    When I unpack "build/package/html/the-foo-book.html.zip" into "unpack-html"
+    Then a file named "unpack-html/the-foo-book.html" should exist
     
