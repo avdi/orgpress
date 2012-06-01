@@ -6,6 +6,8 @@ require 'optparse'
 require 'pathname'
 
 include_current  = true
+root             = Pathname("../..").expand_path(__FILE__)
+lib_dir          = root + "lib"
 book_dir         = ENV.fetch("OP_BOOK_DIR")   { Dir.pwd }
 vendor_dir       = ENV.fetch("OP_VENDOR_DIR") { File.join(book_dir,"vendor") }
 stage            = ENV.fetch("OP_STAGE")      { "finished" }
@@ -49,10 +51,14 @@ previous_stages.each do |stage|
   # Always include the neutral platform directory as well as the
   # platform-specific path
   vpath << File.join(book_dir, "build", stage, "neutral")
+
+  vpath << (lib_dir + "stages" + stage + platform).to_s
+  vpath << (lib_dir + "stages" + stage).to_s
 end
 vpath << File.join(book_dir, platform)
 vpath << book_dir
 vpath << vendor_dir
+vpath << (lib_dir + "platforms" + platform).to_s
 
 case mode.to_sym
 when :vpath
@@ -72,6 +78,12 @@ when :which
     end
   end
   exit 1
+when :makepath                # path for makefile inclusion search
+  makepath = [(lib_dir + "stages" + stage + platform).to_s,
+              (lib_dir + "stages" + stage).to_s,
+              lib_dir.to_s]
+  puts makepath.join(" ")
+  exit 0
 else
   raise NotImplementedError, "Unknown mode '#{mode}'"
 end

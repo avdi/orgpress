@@ -44,6 +44,7 @@ platform_build_dir	= $(abspath $(OP_BUILD_DIR)/$1/$2)
 define build_stage_command
 mkdir -p $(call platform_build_dir,$1,$2);
 $(MAKE) -C $(call platform_build_dir,$1,$2)
+	$(call makepath_flags,$1,$2)
 	-f $(call stage_makefile,$1)
 	OP_STAGE=$1
 	OP_PLATFORM=$2
@@ -56,6 +57,10 @@ stage_vpath		= $(shell $(CALC_VPATH) $(OP_BOOK_DIR) $1 $2 $(OP_STAGES))
 stage_neutral_dir       = $(call platform_build_dir,$1,neutral)
 
 source_platform_dir     = $(abspath $(OP_BOOK_DIR)/$1)
+
+define makepath_flags
+$(addprefix -I,$(strip $(shell $(CALC_VPATH) --stage $1 --platform $2 makepath)))
+endef
 
 ################################################################################
 # SPECIAL RULES

@@ -1,0 +1,1 @@
+include calibre-rules.mk

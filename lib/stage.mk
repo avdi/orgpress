@@ -82,6 +82,9 @@ endef
 # have been made.
 -include $(OP_LIB_DIR)/stages/$(OP_STAGE)/rules.mk
 
+# ...and some rules are platform-specific
+-include $(OP_LIB_DIR)/stages/$(OP_STAGE)/$(OP_PLATFORM)/rules.mk
+
 ################################################################################
 # SETUP
 ################################################################################
