@@ -1,10 +1,10 @@
 @slow
-Feature: Convert files to platform target formats
+Feature: Package files to platform target formats
 
   Background:
     Given prerequisites have been fetched
 
-  Scenario: Convert files
+  Scenario: Package files
     Given a file named "book.yml" with:
     """
     book_name: the-foo-book
@@ -57,11 +57,11 @@ Feature: Convert files to platform target formats
 
     \end{document}
     """
-    When I run `orgpress convert`
+    When I run `orgpress package`
     Then the exit status should be 0
-    Then a file named "build/convert/kindle/the-foo-book.mobi" should exist
-    And a file named "build/convert/epub/the-foo-book.epub" should exist
-    And a file named "build/convert/pdf/the-foo-book.pdf" should exist
-    When I unpack "build/convert/epub/the-foo-book.epub" into "unpack"
+    Then a file named "build/package/kindle/the-foo-book.mobi" should exist
+    And a file named "build/package/epub/the-foo-book.epub" should exist
+    And a file named "build/package/pdf/the-foo-book.pdf" should exist
+    When I unpack "build/package/epub/the-foo-book.epub" into "unpack"
     Then a file named "unpack/the-foo-book.html" should exist
     
