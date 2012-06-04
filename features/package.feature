@@ -1,4 +1,4 @@
-@slow
+@reallyslow
 Feature: Package files to platform target formats
 
   Background:
@@ -10,12 +10,24 @@ Feature: Package files to platform target formats
     book_name: the-foo-book
     assets:
       - images/*.jpg
-      - fonts/myfont.otf
     """
     And a file named "images/foo.jpg"
     And a file named "images/bar.txt"
     And a file named "junk/junk.txt"
-    And a file named "fonts/myfont.otf"
+    And a file named "fonts/myfont/myfont.otf"
+    And a file named "fonts/myfont/myfont-license.txt"
+    And a file named "fonts/myfont/stylesheet.css" with:
+    """
+    @font-face { font-family: 'My Font'; src: url('myfont.otf'); }
+
+    """
+    And a file named "fonts/myfont2/myfont2.ttf"
+    And a file named "fonts/myfont2/myfont2-license.txt"
+    And a file named "fonts/myfont2/stylesheet.css" with:
+    """
+    @font-face { font-family: 'My Font2'; src: url('myfont2.ttf'); }
+
+    """
     And a file named "build/export/html/the-foo-book.html" with:
     """
     <html>
@@ -86,11 +98,31 @@ Feature: Package files to platform target formats
     When I unpack "build/package/epub/the-foo-book.epub" into "unpack-epub"
     Then a file named "unpack-epub/the-foo-book.html" should exist
     Then a file named "unpack-epub/foo.jpg" should exist
-    Then a file named "unpack-epub/fonts/myfont.otf" should exist
+    Then a file named "unpack-epub/myfont.otf" should exist
+    Then a file named "unpack-epub/myfont2.ttf" should exist
+    And the file "unpack-epub/the-foo-book.html" should contain:
+    """
+    font-face {
+        font-family: "My Font2";
+        src: url(myfont2.ttf)
+        }
+    @font-face {
+        font-family: "My Font";
+        src: url(myfont.otf)
+        }
+    """
     Then a file named "unpack-epub/images/bar.txt" should not exist
     Then a file named "unpack-epub/junk/junk.txt" should not exist
     When I unpack "build/package/html/the-foo-book.html.zip" into "unpack-html"
     Then a file named "unpack-html/the-foo-book.html" should exist
     Then a file named "unpack-html/images/foo.jpg" should exist
-    Then a file named "unpack-html/fonts/myfont.otf" should exist
-    
+    Then a file named "unpack-html/myfont.otf" should exist
+    Then a file named "unpack-html/myfont2.ttf" should exist
+    And the file "unpack-html/op-composite-stylesheet.css" should contain:
+    """
+    @font-face { font-family: 'My Font'; src: url('myfont.otf'); }
+    """
+    And the file "unpack-html/op-composite-stylesheet.css" should contain:
+    """
+    @font-face { font-family: 'My Font2'; src: url('myfont2.ttf'); }
+    """

@@ -11,5 +11,8 @@ end
 
 group :test do
   gem 'cucumber', '~> 1.2'
-  gem 'aruba', '~> 0.4'
+  gem 'aruba', '~> 0.4', :git => 'https://github.com/cucumber/aruba.git'
 end
+
+gem 'rubyzip', '~> 0.9.6'
+gem 'nokogiri', '~> 1.5'

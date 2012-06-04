@@ -14,6 +14,8 @@ stage            = ENV.fetch("OP_STAGE")      { "finished" }
 platform         = ENV.fetch("OP_PLATFORM")   { "neutral" }
 stages           = ENV.fetch("OP_STAGES")     { "" }.split
 absolute         = false
+list_all         = false
+reverse_order    = false
 
 OptionParser.new do |options|
   options.on("--[no-]include-current", "Include paths from current stage") do |value|
@@ -36,6 +38,13 @@ OptionParser.new do |options|
   end
   options.on("--[no-]absolute", "Output an absolute path") do |value|
     absolute = value
+  end
+  options.on("-a", "--[no-]-all", "List all matching files") do |value|
+    list_all = value
+  end
+  options.on("-r", "--[no-]-reverse", "List files least- to most-specific") do
+    |value|
+    reverse_order = value
   end
 end.parse!
 
@@ -64,20 +73,30 @@ case mode.to_sym
 when :vpath
   print vpath.uniq.join(":")
 when :which
-  file = ARGV.shift
-  result = vpath.each do |path|
-    candidate = Pathname(path) + file
-    if candidate.exist?
-      if absolute
-        puts candidate
-      else
-        puts candidate.relative_path_from(Pathname(book_dir).expand_path)
-      end
-      puts
-      exit 0
+  file    = ARGV.shift
+  minimum = list_all ? 0 : 1
+
+  matches = vpath.map{|path|
+    glob_matches = Pathname.glob(Pathname(path) + file).sort
+  }.flatten
+
+  unless absolute
+    matches.map! do |file|
+      file.relative_path_from(Pathname(book_dir).expand_path)
     end
   end
-  exit 1
+
+  unless list_all
+    matches = matches.take(1)
+  end
+
+  if reverse_order
+    matches.reverse!
+  end
+
+  puts *matches
+
+  exit(matches.size >= minimum)
 when :makepath                # path for makefile inclusion search
   makepath = [(lib_dir + "stages" + stage + platform).to_s,
               (lib_dir + "stages" + stage).to_s,

@@ -56,6 +56,13 @@ export OP_STYLESHEET	?= $(abspath $(OP_LIB_DIR)/styles.css)
 # of "html".
 export OP_FORMAT	= $(OP_PLATFORM)
 
+# Directory for third-party files
+OP_VENDOR_DIR		?= $(OP_BOOK_DIR)/vendor
+
+# A master stylesheet formed from the concatenation of all system and
+# project stylesheets.
+COMPOSITE_STYLESHEET	= op-composite-stylesheet.css
+
 ################################################################################
 # FUNCTIONS
 ################################################################################

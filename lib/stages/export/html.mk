@@ -8,3 +8,10 @@ export OP_HTML_PREAMBLE_FILE	=
 export OP_HTML_POSTAMBLE_FILE	=
 
 export OP_STYLESHEET		= $(abspath $(OP_LIB_DIR)/styles.css)
+
+define OP_STYLE_EXTRA
+"<link rel=\"stylesheet\" type=\"text/css\" href=\"$(COMPOSITE_STYLESHEET)\"/>"
+endef
+
+export_plist			+= :style-extra $(OP_STYLE_EXTRA)
+

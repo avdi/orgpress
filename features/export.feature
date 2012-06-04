@@ -27,6 +27,10 @@ Feature: Export to format
     When I run `orgpress export`
     Then the exit status should be 0
     And a file named "build/export/html/the-foo-book.html" should exist
+    And the file "build/export/html/the-foo-book.html" should contain:
+    """
+    <link rel="stylesheet" type="text/css" href="op-composite-stylesheet.css"/>
+    """
     And a file named "build/export/kindle/the-foo-book.html" should exist
     And a file named "build/export/epub/the-foo-book.html" should exist
     And a file named "build/export/pdf/the-foo-book.tex" should exist

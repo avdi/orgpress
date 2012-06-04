@@ -1,4 +1,6 @@
-require 'rubygems'
+#!/usr/bin/env ruby
+require "rubygems"
+require "bundler/setup"
 require 'zip/zip'
 require 'nokogiri'
 

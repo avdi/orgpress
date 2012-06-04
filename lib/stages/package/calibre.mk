@@ -1,6 +1,16 @@
 # Some common definitions for formats that use Calibre for conversion
 
 ################################################################################
+# VARIABLES
+################################################################################
+
+CALIBRE_STYLESHEET		= $(OP_LIB_DIR)/calibre.css
+
+SYSTEM_STYLESHEETS		+= $(CALIBRE_STYLESHEET)
+
+outputs				= $(OP_BOOK_NAME).$(CONVERT_FORMAT_EXTENSION)
+
+################################################################################
 # TOOLS
 ################################################################################
 
@@ -19,35 +29,10 @@ define CONVERTFLAGS
 --level1-toc "//h:div[@class='outline-2']/h:h2" 
 --level2-toc "//h:div[@class='outline-3']/h:h3" 
 --level3-toc "//h:div[@class='outline-4']/h:h4" 
---extra-css $(CALIBRE_STYLESHEET)
+--extra-css $(COMPOSITE_STYLESHEET)
 endef
 
 ################################################################################
-# VARIABLES
+# FUNCTIONS
 ################################################################################
 
-ASSET_ROOTS			= $(OP_BOOK_DIR) $(OP_BOOK_DIR)/$(OP_PLATFORM)
-
-LOCAL_ASSETS			= $(addprefix $(abspath $(CURDIR))/,$(RELATIVE_ASSETS))
-
-define RELATIVE_ASSETS
-$(strip $(foreach root,
-                  $(ASSET_ROOTS),
-                  $(patsubst $(root)/%,
-                             %,
-                             $(wildcard $(OP_ASSETS:%=$(root)/%)))))
-endef
-
-define SOURCE_ASSETS
-$(strip $(foreach root,
-                  $(ASSET_ROOTS),
-                  $(wildcard $(OP_ASSETS:%=$(root)/%))))
-endef
-
-$(info LOCAL_ASSETS=$(LOCAL_ASSETS))
-$(info SOURCE_ASSETS=$(SOURCE_ASSETS))
-
-
-CALIBRE_STYLESHEET		= $(OP_LIB_DIR)/calibre.css
-
-outputs				= $(OP_BOOK_NAME).$(CONVERT_FORMAT_EXTENSION)
