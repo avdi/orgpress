@@ -14,8 +14,29 @@ AWKFLAGS		=
 # GLOBAL VARIABLES
 ################################################################################
 
+# Path to this file
+OP_MAKEFILE		:= $(lastword $(MAKEFILE_LIST))
+
+# The OrgPress root directory
+export OP_ROOT		?= $(abspath $(dir $(OP_MAKEFILE))/..)
+
+# The book project root directory
+export OP_BOOK_DIR	?= $(abspath $(CURDIR))
+
+# The root for all built files
+export OP_BUILD_DIR 	?= $(abspath $(CURDIR)/build)
+
+export OP_LIB_DIR	?= $(abspath $(OP_ROOT)/lib)
+
+# The name (for file naming purposes) of the book being built
+export OP_BOOK_NAME	?= $(notdir $(OP_BOOK_DIR))
+
 # The book title
 export OP_BOOK_TITLE	?= $(OP_BOOK_NAME)
+
+export OP_SOURCES 	?= $(OP_BOOK_NAME).org
+
+export OP_FRONTMATTER	?= $(OP_LIB_DIR)/basic-frontmatter.org
 
 # The author, or authors
 export OP_AUTHOR	?= Unknown Author
@@ -62,6 +83,12 @@ OP_VENDOR_DIR		?= $(OP_BOOK_DIR)/vendor
 # A master stylesheet formed from the concatenation of all system and
 # project stylesheets.
 COMPOSITE_STYLESHEET	= op-composite-stylesheet.css
+
+# We use the bookbinding meaning of "signature", to mean "a section
+# that contains text".
+export OP_SIGNATURE_NAMES ?= $(basename $(OP_FRONTMATTER)) \
+			     $(basename $(OP_SOURCES))     \
+                             $(basename $(OP_BACKMATTER))
 
 ################################################################################
 # FUNCTIONS

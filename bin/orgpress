@@ -1,38 +1,103 @@
 #!/usr/bin/env ruby
+require "rubygems"
+require "bundler/setup"
 require 'pathname'
 require 'yaml'
 
-ORGPRESS_ROOT     = (Pathname(__FILE__).dirname + "..")
-ORGPRESS_BIN      = (ORGPRESS_ROOT + "bin").expand_path
-ORGPRESS_MAKEFILE = ORGPRESS_ROOT + "main.mk"
-CALC_VPATH        = (ORGPRESS_BIN + "calc_vpath")
-BOOK_SPEC         = Pathname("book.yml").expand_path
-BOOK_DIR          = BOOK_SPEC.dirname
-BOOK_DIRNAME      = BOOK_DIR.basename.to_s
 STAGES            = %w[
   fetch-prerequisites normalize concatenate extract prepare-objects expand
   export package distribute finished
 ]
 
-path = "#{ORGPRESS_BIN}#{File::PATH_SEPARATOR}#{ENV['PATH']}"
+PLATFORMS         = %w[
+  neutral epub kindle web text pdf html
+]
 
-env = {
-  "OP_BOOK_NAME"  => BOOK_DIRNAME,
-  "OP_STAGES"     => STAGES.join(" "),
-  "PATH"          => path
-}
+def include_current;     true; end
+def root;                Pathname("../..").expand_path(__FILE__); end
+def lib_dir;             root + "lib"; end
+def bin_dir;             (root + "bin").expand_path; end
+def book_dir;            Pathname(ENV.fetch("OP_BOOK_DIR")   { Dir.pwd }); end
+def vendor_dir
+  Pathname(ENV.fetch("OP_VENDOR_DIR") { book_dir + "vendor"})
+end
+def build_dir
+  Pathname(ENV.fetch("OP_BUILD_DIR") {book_dir + "build"})
+end
+def book_spec;           book_dir + "book.yml"; end
+def book_dirname;        book_dir.basename.to_s; end
+def vendor_dir
+  ENV.fetch("OP_VENDOR_DIR") { File.join(book_dir,"vendor") }
+end
+def stage;               ENV.fetch("OP_STAGE")      { "finished" }; end
+def platform;            ENV.fetch("OP_PLATFORM")   { "neutral" }; end
+def stages
+  if ENV.key?("OP_STAGES")
+    ENV["OP_STAGES"].split
+  else
+    STAGES
+  end
+end
+def calc_vpath;          bin_dir + "calc_vpath"; end
+def absolute;            false; end
+def list_all;            false; end
+def reverse_order;       false; end
+def makeflags;           %W[--no-builtin-rules]; end
+def stage_makefile;      lib_dir + "stage.mk"; end
 
+def stage_command(stage, platform)
+  stage_platform_dir = build_dir + stage + platform
+  stage_platform_dir.mkpath unless stage_platform_dir.exist?
+  %W[make -f #{stage_makefile} -C #{stage_platform_dir}] +
+    makeflags + makepath_flags(stage, platform) +
+    %W[OP_STAGE=#{stage} OP_PLATFORM=#{platform} default]
+end
 
-if BOOK_SPEC.exist?
-  YAML.load_file(BOOK_SPEC).each do |key, value|
-    env["OP_#{key.upcase}"] = Array(value).join(" ")
+def makepath_flags(stage, platform)
+  IO.popen([env, calc_vpath.to_s,
+           *%W[--stage #{stage} --platform #{platform} makepath]]) do |cmd|
+    cmd.read
+  end.split.map{|path| "-I#{path}"}
+end
+
+def path
+  "#{bin_dir}#{File::PATH_SEPARATOR}#{ENV['PATH']}"
+end
+
+def env
+  @env ||= {
+    "OP_ROOT"             => root.to_s,
+    "OP_BOOK_NAME"        => book_dirname,
+    "OP_BOOK_DIR"         => book_dir.to_s,
+    "OP_BUILD_DIR"        => build_dir.to_s,
+    "OP_LIB_DIR"          => lib_dir.to_s,
+    "OP_VENDOR_DIR"       => vendor_dir.to_s,
+    "OP_STAGES"           => stages.join(" "),
+    "OP_PLATFORM_LIST"    => PLATFORMS.join(" "),
+    "PATH"                => path
+  }.merge(options_env)
+end
+
+def options_env
+  if book_spec.exist?
+    YAML.load_file(book_spec).each_with_object({}) do |(key, value),h|
+      h["OP_#{key.upcase}"] = Array(value).join(" ")
+    end
+  else
+    {}
   end
 end
 
 case ARGV.first
 when "which", "vpath", "makepath"
-  exec(env, CALC_VPATH.to_s, *ARGV)
+  exec(env, calc_vpath.to_s, *ARGV)
 else
-  make_args = %W(-f #{ORGPRESS_MAKEFILE}) + ARGV
-  exec(env, "make", *make_args)
+  requested_stages = Array(ARGV.shift || stages)
+  requested_stages.each do |stage|
+    PLATFORMS.each do |platform|
+      puts "*** Stage: #{stage} / Platform: #{platform}"
+      system(env, *stage_command(stage, platform)) or
+        fail "Failure building #{stage}/#{platform}"
+    end
+  end
 end
