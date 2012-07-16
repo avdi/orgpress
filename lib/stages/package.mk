@@ -15,6 +15,9 @@ SYSTEM_STYLESHEETS		= op-neutral-stylesheet.css
 # Project stylesheets. Defaults to every *.css file.
 STYLESHEETS			= $(call find_files,'*.css')
 
+# Generated stylesheets for code listings
+LISTINGS_STYLESHEETS		= op-listings-stylesheet.css
+
 # Where to look for asset files, in order from least specific to most specific.
 ASSET_ROOTS			= $(strip $(OP_VENDOR_DIR) \
 				          $(OP_BOOK_DIR) \

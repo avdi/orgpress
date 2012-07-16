@@ -90,6 +90,7 @@ end
 
 case ARGV.first
 when "which", "vpath", "makepath"
+  # TODO: Merge calc_vpath into this file.
   exec(env, calc_vpath.to_s, *ARGV)
 else
   requested_stages = Array(ARGV.shift || stages)

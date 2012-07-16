@@ -1,6 +1,12 @@
 .PHONY: copy_assets
 
-op-composite-stylesheet.css: $(SYSTEM_STYLESHEETS) $(FONT_STYLESHEETS) $(STYLESHEETS)
+op-listings-stylesheet.css: PYG_STYLES_CMD=pygmentize -S colorful -f html
+op-listings-stylesheet.css:
+	echo '/* Pygments generated styles ($(PYG_STYLES_CMD)) */' > $@
+	$(PYG_STYLES_CMD) >> $@
+	echo '/* END Pygments generated styles ($(PYG_STYLES_CMD)) */' >> $@
+
+op-composite-stylesheet.css: $(SYSTEM_STYLESHEETS) $(LISTINGS_STYLESHEETS) $(FONT_STYLESHEETS) $(STYLESHEETS)
 	cat $^ > $@
 
 # copy_assets:

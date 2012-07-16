@@ -5,6 +5,7 @@
 ################################################################################
 # VARIABLES
 ################################################################################
+CALC_VPATH_FLAGS	+= --no-include-current
 outputs			= MLISTINGS
 preplisting_file	= $(abspath $(OP_ROOT)/bin/preplisting.awk)
 preplisting		= $(AWK) $(AWKFLAGS) -f $(preplisting_file)

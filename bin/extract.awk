@@ -11,6 +11,7 @@ BEGIN {
     IGNORECASE = 1 
     caption_pattern = /^[[:space:]]*#\+CAPTION:/
     listings_file   = "LISTINGS"
+    role            = "source"
 }
 
 function start_listing()
@@ -24,11 +25,45 @@ function start_listing()
     system("rm " listing_file "> /dev/null 2>&1")
     print listing_basename >listings_file
     print_metadata(listing_file)
-    if(caption)
-        print "ORGPRESS_LISTING(" listing_name ",«" caption  "»)"
-    else
-        print "ORGPRESS_LISTING(" listing_name ")"
-    caption = ""
+
+    if(header_arguments[":exports",0] == "results") {
+        suppress_inclusion = 1
+        awaiting_results   = 1
+    }
+}
+
+function end_listing() {
+    if(!suppress_inclusion) {
+        if(caption)
+            print "ORGPRESS_LISTING(" listing_name ",«" caption  "»)"
+        else
+            print "ORGPRESS_LISTING(" listing_name ")"
+    }
+    if(!awaiting_results) {
+        caption = ""
+    }
+    if(getting_results) {
+        awaiting_results = 0
+    }
+    role               = "source"
+    identifier         = 0
+    getting_results    = 0
+    suppress_inclusion = 0
+}
+
+function start_source_listing() {
+    delete header_arguments
+    current_argument = "MISC"
+    for(i=3; i<NF; i++) {
+        if($i ~ /^:/) {
+            current_argument = $i
+            value_index      = 0
+        } else {
+            current_value = header_arguments[current_argument]
+            header_arguments[current_argument] = (current_value " " $i)
+            header_arguments[current_argument,value_index] = $i
+        }
+    }
 }
 
 function print_metadata(file)
@@ -38,14 +73,32 @@ function print_metadata(file)
     print "filename: " source_name >file
     print "number: " listing_count >file
     print "name: " listing_name >file
+    if(identifier)
+        print "identifier: " identifier >file
+    print "role: " role >file
     if(caption)
         print "caption: " caption >file
     print "" >file
     ORS = "\n"
 }
 
-/^[[:space:]]*#\+BEGIN_SRC/     { start_listing() }
-/^[[:space:]]*#\+BEGIN_EXAMPLE/ { start_listing() }
+/^[[:space:]]*#\+BEGIN_SRC/ { 
+    role = "source"
+    start_source_listing() 
+    start_listing()
+}
+/^[[:space:]]*#\+BEGIN_EXAMPLE/  { 
+    role = "output"
+    start_listing() 
+}
+
+/^[[:space:]]*#\+END_(SRC|EXAMPLE)/ {
+    end_listing()
+}
+/^[[:space:]]*#\+RESULTS.*:/ {
+    getting_results = 1
+    next
+}
 /^[[:space:]]*#\+BEGIN_SRC/,/^[[:space:]]*#\+END_SRC/ { 
     print >listing_file
     next
@@ -68,6 +121,10 @@ function print_metadata(file)
 /^[[:space:]]*#\+CAPTION:/ {
     caption = $0
     sub(/^[[:space:]]*#\+CAPTION:[[:space:]]*/,"",caption)
+    next
+}
+$1 ~ /#\+NAME:/ {
+    identifier = $2
     next
 }
 { print }
