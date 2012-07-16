@@ -10,7 +10,7 @@ ZIPFLAGS		=
 ################################################################################
 
 # Stylesheets that are part of (or created by) OrgPress
-SYSTEM_STYLESHEETS		= 
+SYSTEM_STYLESHEETS		= op-neutral-stylesheet.css
 
 # Project stylesheets. Defaults to every *.css file.
 STYLESHEETS			= $(call find_files,'*.css')
