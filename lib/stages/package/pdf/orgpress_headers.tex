@@ -1,0 +1,54 @@
+\setcounter{secnumdepth}{-2}
+\usepackage{minted}
+
+% reduce verticle space after listings
+% See http://stackoverflow.com/questions/2318598/how-to-reduce-the-seperation-from-other-text-using-latex-minted
+% \setlength\partopsep{-\topsep}
+
+\usemintedstyle{default}
+\usepackage[small,it]{caption}
+\usepackage{framed}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true}
+\hypersetup{hyperindex=true}
+\hypersetup{linkcolor=blue}
+\hypersetup{urlcolor=blue}
+
+\usepackage{pdfpages}
+
+\usepackage{fancyvrb}
+\usepackage[T1]{fontenc}
+\usepackage[scaled]{beraserif}
+\usepackage[scaled]{berasans}
+\usepackage[scaled]{beramono}
+
+% Get rid of blank pages between chapters
+\let\cleardoublepage\clearpage
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\definecolor{codeframecolor}{rgb}{0.95,0.95,0.95}
+% \definecolor{codebgcolor}{RGB}{255,244,204}
+\definecolor{codebgcolor}{rgb}{0.97,0.97,0.97}
+\definecolor{shadecolor}{gray}{.95}
+\usepackage{epstopdf}
+\usepackage{calc}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyheadoffset[RO,LE]{\marginparsep+\marginparwidth}
+\fancyhead{} % clear header fields
+\fancyhead[LO,RE]{\leftmark}
+\fancyhead[RO,LE]{\thepage}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\definecolor{exceptionalred}{RGB}{232,0,40}
+%%\renewcommand\headrule
+%% {{\color{exceptionalred}%
+%%   \hrule height 2pt
+%%          width\headwidth
+%%   \vspace{1pt}%
+%%   \hrule height 1pt
+%%          width\headwidth
+%%   \vspace{-4pt}}}
