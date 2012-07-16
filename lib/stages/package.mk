@@ -89,7 +89,7 @@ endef
 LOCAL_ASSET_TARGETS = $(addprefix $(CURDIR)/,$(ASSET_TARGETS))
 
 define ADD_FONTS_TO_ARCHIVE
-$(ZIP) $(ZIPFLAGS) $@ -j $(FONT_FILES)
+if [ -n "$(FONT_FILES)" ]; then $(ZIP) $(ZIPFLAGS) $@ -j $(FONT_FILES); fi
 endef
 
 ################################################################################
