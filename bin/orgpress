@@ -6,7 +6,7 @@ require 'yaml'
 
 STAGES            = %w[
   fetch-prerequisites normalize concatenate extract prepare-objects expand
-  export package distribute finished
+  export package bundle distribute finished
 ]
 
 PLATFORMS         = %w[

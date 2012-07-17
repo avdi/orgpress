@@ -6,6 +6,7 @@ require 'optparse'
 require 'pathname'
 
 include_current  = true
+all_platforms    = false
 root             = Pathname("../..").expand_path(__FILE__)
 lib_dir          = root + "lib"
 book_dir         = ENV.fetch("OP_BOOK_DIR")   { Dir.pwd }
@@ -13,6 +14,7 @@ vendor_dir       = ENV.fetch("OP_VENDOR_DIR") { File.join(book_dir,"vendor") }
 stage            = ENV.fetch("OP_STAGE")      { "finished" }
 platform         = ENV.fetch("OP_PLATFORM")   { "neutral" }
 stages           = ENV.fetch("OP_STAGES")     { "" }.split
+platforms        = ENV.fetch("OP_PLATFORM_LIST").split
 absolute         = false
 list_all         = false
 reverse_order    = false
@@ -20,6 +22,10 @@ reverse_order    = false
 OptionParser.new do |options|
   options.on("--[no-]include-current", "Include paths from current stage") do |value|
     include_current = value
+  end
+  options.on("--[no-]all-platforms", "Include all platforms in search path") do
+    |value|
+    all_platforms = value
   end
   options.on("--book-dir DIR", "The book project root directory") do |value|
     book_dir = value
@@ -55,8 +61,16 @@ stage_index      = stages.index(stage)
 last_stage_index = include_current ? stage_index : (stage_index - 1)
 previous_stages  = stages[0..last_stage_index].reverse
 vpath = []
+included_platforms = if all_platforms
+                       platforms.dup - ["neutral"]
+                     else
+                       [platform]
+                     end
+
 previous_stages.each do |stage|
-  vpath << File.join(book_dir, "build", stage, platform)
+  included_platforms.each do |platform|
+    vpath << File.join(book_dir, "build", stage, platform)
+  end
   # Always include the neutral platform directory as well as the
   # platform-specific path
   vpath << File.join(book_dir, "build", stage, "neutral")
