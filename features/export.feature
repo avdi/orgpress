@@ -8,6 +8,7 @@ Feature: Export to format
     """
     And a file named "the-foo-book.master" with:
     """
+    #+DATE: 2012-07-16
     * Chapter 1
 
     The /quick brown/ fox jumped over the *lazy* =dog=.
@@ -35,4 +36,33 @@ Feature: Export to format
     And a file named "build/export/epub/the-foo-book.html" should exist
     And a file named "build/export/pdf/the-foo-book.tex" should exist
     And a file named "build/export/text/the-foo-book.txt" should exist
+    And the file "build/export/text/the-foo-book.txt" should contain exactly:
+    """
+                                 the-foo-book
+                                 ============
+
+    Author: Avdi Grimm
+    Date: 2012-07-16
+
+
+    Chapter 1 
+    ----------
+
+    The /quick brown/ fox jumped over the *lazy* =dog=.
+
+
+
+      puts "hello, world"
+
+
+
+
+      hello, world
+
+
+    Figure 1:
+
+    [./fig1.jpg]
+
+    """
 
