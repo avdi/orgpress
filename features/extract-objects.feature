@@ -26,6 +26,17 @@ Feature: Extract objects
       end
     #+END_SRC
 
+    #+name: fizz
+    #+BEGIN_SRC ruby
+    def fizz; end
+    #+END_SRC
+    
+    #+name: buzz
+    #+BEGIN_SRC ruby :tangle yes :noweb strip-export :tangle buzz
+    <<fizz>>
+    def buzz; end
+    #+END_SRC
+
     This paragraph is below the code listing.
     """
     When I run `orgpress extract`
@@ -39,6 +50,10 @@ Feature: Extract objects
     ORGPRESS_LISTING(the-foo-book-001)
 
     ORGPRESS_LISTING(the-foo-book-002,«goodbye in ruby»)
+
+    ORGPRESS_LISTING(the-foo-book-003)
+
+    ORGPRESS_LISTING(the-foo-book-004)
 
     This paragraph is below the code listing.
 
@@ -73,10 +88,38 @@ Feature: Extract objects
     #+END_SRC
 
     """
+    And the file "build/extract/neutral/the-foo-book-003.listing" should contain exactly:
+    """
+    filename: the-foo-book.monolith
+    number: 3
+    name: the-foo-book-003
+    identifier: fizz
+    role: source
+    
+    #+BEGIN_SRC ruby
+    def fizz; end
+    #+END_SRC
+
+    """
+    And the file "build/extract/neutral/the-foo-book-004.listing" should contain exactly:
+    """
+    filename: the-foo-book.monolith
+    number: 4
+    name: the-foo-book-004
+    identifier: buzz
+    role: source
+    
+    #+BEGIN_SRC ruby :tangle yes :noweb strip-export :tangle buzz
+    def buzz; end
+    #+END_SRC
+
+    """
     And the file "build/extract/neutral/LISTINGS" should contain exactly:
     """
     the-foo-book-001.listing
     the-foo-book-002.listing
+    the-foo-book-003.listing
+    the-foo-book-004.listing
 
     """
 

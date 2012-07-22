@@ -18,6 +18,7 @@ function start_listing()
 {
     ++listing_count 
     ("basename " FILENAME " .monolith") | getline basename 
+    in_listing       = 1
     formatted_count  = sprintf("%03d", listing_count)
     listing_name     = (basename "-" formatted_count)
     listing_basename = (listing_name ".listing")
@@ -49,6 +50,7 @@ function end_listing() {
     identifier         = 0
     getting_results    = 0
     suppress_inclusion = 0
+    in_listing         = 0
 }
 
 function start_source_listing() {
@@ -99,7 +101,13 @@ function print_metadata(file)
     getting_results = 1
     next
 }
-/^[[:space:]]*#\+BEGIN_SRC/,/^[[:space:]]*#\+END_SRC/ { 
+
+# Filter out Noweb references
+/^[[:space:]]*<<[[:alnum:]_-]+>>[[:space:]]*$/ {
+    next
+}
+
+in_listing && /^[[:space:]]*#\+BEGIN_SRC/,/^[[:space:]]*#\+END_SRC/ { 
     print >listing_file
     next
 }
